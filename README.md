@@ -34,6 +34,10 @@ THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
 - Have a disk space requirement of less than 2 GB
 - Will be released as early as possible and greatly evolve during their lifespan with frequent updates delivered to the users
   - Update experience should be as smooth as possible with automatic data and settings migrations when necessary
+  - The apps can't require extensive testing periods before updates, but try to make it up with fast reaction times to defects that get into production.
+  -   The app needs to gracefully handle unhandled exceptions from secondary features (such as ads, logging, notifications). However, it is important that these events are logged and sent to an analytics backend.
+  -   Logged errors and crashes need to be available to the developer asap.
+  -   StackTraces and other error data needs to be as accurate as possible. It should include information on how to reproduce the event in debuggable environment.
 
 ADDITIONALLY THE APPS MIGHT:  
 - R3: Implement different GUIs and navigation structures for different devices (WP, Win 8, (Xbox One, iOS and Android with Xamarin))
@@ -51,6 +55,7 @@ THE APPS ARE UNLIKELY TO:
 - Have a development team larger than three developers
 - Be implemented as HTML-hybrid apps
 - Be designed by the developer(s) themselves
+- Be mission critical: Defects are unlikely to put anyones health at risk
 
 THESE REQUIREMENTS LEAD INTO THE FOLLOWING GUIDELINES [Id / Responded requirements : Guideline]:
 - G1 / R3, R4.4, R4.5: Follow strict separation of UI, bussiness logic, and data access
