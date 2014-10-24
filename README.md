@@ -9,9 +9,14 @@ THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
 - R1: Start up fast enough
 - Present the user with top of the line visual quality and fluidity (constantly good framerate)
 - Let user navigate between pages (handling backstack and passing parameters from page to page)
+  - Backstack is not always simpile chronological stack (eg. when deep linking into specific page, back navigation takes user to (main) page), also some apps might use hierarchical back stack rather than chronological one)
 - Can show popups when required
+- Dialogs that pass the user chosen answer back to host
 - Need to be distributable as commercial closed source (3rd party component licenses)
-- R2: Support easy optimization for different screen resolutions and small differences in aspect ratios
+- R2: Support easy optimization for different screen resolutions and differences in aspect ratios
+  - Assets
+  - Font sizes
+  - Seperate pages and layouts for different device categories
 - R4: Get data from a backend
   - R4.1: Multiple backends (with different data formats) might be used
   - R4.2: Most likely json/xml from a restful web service
