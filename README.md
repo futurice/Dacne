@@ -10,6 +10,7 @@ THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
 - Present the user with top of the line visual quality and fluidity (constantly good framerate)
 - Let user navigate between pages (handling backstack and passing parameters from page to page)
 - Can show popups when required
+- Need to be distributable as commercial closed source (3rd party component licenses)
 - R2: Support easy optimization for different screen resolutions and small differences in aspect ratios
 - R4: Get data from a backend
   - R4.1: Multiple backends (with different data formats) might be used
