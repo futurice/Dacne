@@ -1,12 +1,15 @@
 win-client-dev-ref-architecture
 ===============================
 
-Repository for documentation and implementation of a reference architecture for windows apps build by Futurice
+Repository for documentation and implementation of a reference architecture for (Universal) Windows apps build by Futurice
 
 -----------------------------
 
 THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
-- R1: Start up fast enough, present user with top of the line visual quality and fluidity (constantly good framerate) and let user navigate between pages (handling backstack and passing parameters from page to page), allow popups when required.
+- R1: Start up fast enough
+- Present the user with top of the line visual quality and fluidity (constantly good framerate)
+- Let user navigate between pages (handling backstack and passing parameters from page to page)
+- Can show popups when required
 - R2: Support easy optimization for different screen resolutions and small differences in aspect ratios
 - R4: Get data from a backend
   - R4.1: Multiple backends (with different data formats) might be used
@@ -48,6 +51,7 @@ ADDITIONALLY THE APPS MIGHT:
 - Push new data or updates to the received data to the backend
   - In some cases it is required to be able to store the changes on the device between sessions
 - (Code up to view models might be required to be able to run on iOS and Android with Xamarin)
+- Be localized to multiple languages
 
 THE APPS ARE UNLIKELY TO:
 - Have automated UI tests
@@ -55,7 +59,7 @@ THE APPS ARE UNLIKELY TO:
 - Have a development team larger than three developers
 - Be implemented as HTML-hybrid apps
 - Be designed by the developer(s) themselves
-- Be mission critical: Defects are unlikely to put anyones health at risk
+- Be mission critical: Defects are unlikely to put anyone's health at risk
 
 THESE REQUIREMENTS LEAD INTO THE FOLLOWING GUIDELINES [Id / Responded requirements : Guideline]:
 - G1 / R3, R4.4, R4.5: Follow strict separation of UI, bussiness logic, and data access
