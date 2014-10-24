@@ -58,7 +58,7 @@ ADDITIONALLY THE APPS MIGHT:
   - In some cases registration and login are handled by third parties, and third party implementations, such as facebook, web view navigated to a web page implemented by a third party etc..
   - In some cases login and registration UIs are implemented by the app, in which cases efficient form handling with validation, hints and such is important.
 - Push new data or updates to the received data to the backend
-  - In some cases it is required to be able to store the changes on the device between sessions
+  - In some cases it is required to be able to store the changes on the device between sessions (and handle possible 'merge' conflicts when syncing)
 - (Code up to view models might be required to be able to run on iOS and Android with Xamarin)
 - Be localized to multiple languages
 - Want to conserve battery by bundling network requests (for background tasks?)
