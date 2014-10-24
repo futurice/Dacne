@@ -28,9 +28,12 @@ THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
   - R4.7: Support debugging against rare, but know API responses
 - Parse the data into model objects and setup references between them
   - In some cases it is worthwhile to parse from the stream while the data is still being downloaded
+    - However, in some cases the response data might not allow starting to parse before it has been fully loaded (data order)
   - In some cases model objects in memory need to be updated from the downloaded data. In these cases it is important that the updates get pushed to the UI.
   - In some cases it is worthwhile to aim for pushing the parsed objects (or their carried changes) into the UI ASAP, while the downloading and parsing might still be ongoing.
+    - Needs to be able to recover if downloading response data can not be fully completed (load previous succesfull response)
 - Might have multiple consequent (interrelated?) requests ongoing
+  - Requests priorization
 - Can show a progress indicator to the user while the backend request and parsing of the data is in progress
   - Ideally a progress bar
 - Implement deep analytics to track both user actions and bugs
@@ -58,6 +61,7 @@ ADDITIONALLY THE APPS MIGHT:
   - In some cases it is required to be able to store the changes on the device between sessions
 - (Code up to view models might be required to be able to run on iOS and Android with Xamarin)
 - Be localized to multiple languages
+- Want to conserve battery by bundling network requests (for background tasks?)
 
 THE APPS ARE UNLIKELY TO:
 - Have automated UI tests
