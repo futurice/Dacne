@@ -62,6 +62,7 @@ ADDITIONALLY THE APPS MIGHT:
 - (Code up to view models might be required to be able to run on iOS and Android with Xamarin)
 - Be localized to multiple languages
 - Want to conserve battery by bundling network requests (for background tasks?)
+- Want to be compiled with .NET Native for better performance
 
 THE APPS ARE UNLIKELY TO:
 - Have automated UI tests
