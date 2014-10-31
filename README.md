@@ -29,7 +29,7 @@ THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
 - Parse the data into model objects and setup references between them
   - In some cases it is worthwhile to parse from the stream while the data is still being downloaded
     - However, in some cases the response data might not allow starting to parse before it has been fully loaded (data order)
-  - In some cases model objects in memory need to be updated from the downloaded data. In these cases it is important that the updates get pushed to the UI.
+  - In some cases data in memory needs to be partially updated from the downloaded data. In these cases it is important that the updates get pushed to the UI.
   - In some cases it is worthwhile to aim for pushing the parsed objects (or their carried changes) into the UI ASAP, while the downloading and parsing might still be ongoing.
     - Needs to be able to recover if downloading response data can not be fully completed (load previous succesfull response)
 - Might have multiple consequent (interrelated?) requests ongoing
@@ -37,13 +37,13 @@ THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
 - Can show a progress indicator to the user while the backend request and parsing of the data is in progress
   - Ideally a progress bar
 - Implement deep analytics to track both user actions and bugs
-- Can be efficiently developed and maintained by varying number of developers with varying leves of expertice and experience.
+- Can be efficiently developed and maintained by varying number of developers with varying leves of expertise and experience.
 - Support rapid GUI tweaking iterations and fast build+deploy process to facilitate developer+designer 'pair programming'
-- Support efficient unit (and integration) testing (black box? white box?) with mocking (only platform classes? all classes?).
-- Support continous integration
+- Support efficient unit (and integration) testing (black box? white box?) with mocking (only platform classes? all classes?). Property based testing? (generating data sets to test against)
+- Support continuous integration (visual studio online?)
 - Can be realistically distributed via a 4G connection
-- Have a memory footprint less than ~100 MB
-- Have a disk space requirement of less than 2 GB
+- Have a memory footprint less than ~180 MB
+- Doesn't use excessive amounts of disk space (keep track of usage)
 - Will be released as early as possible and greatly evolve during their lifespan with frequent updates delivered to the users
   - Update experience should be as smooth as possible with automatic data and settings migrations when necessary
   - The apps can't require extensive testing periods before updates, but try to make it up with fast reaction times to defects that get into production.
