@@ -10,7 +10,6 @@ Repository for documentation and implementation of a reference architecture for 
 This section lists the functional and non-functional requirements that the apps build using the reference architecture are expected to have.
 
 ### Functional ###
-
 *The apps will..*
 
 - Let user navigate between pages (handling backstack and passing state from page to page)
@@ -37,17 +36,15 @@ This section lists the functional and non-functional requirements that the apps 
     - Needs to be able to recover if downloading response data can not be fully completed (load previous succesfull response)
 - Might have multiple consequent (interrelated?) requests ongoing
   - Requests priorization
-- Can show a progress indicator to the user while the backend request and parsing of the data is in progress
+- Show a progress indicator to the user while the backend request and parsing of the data is in progress
   - Ideally a progress bar
 - Implement deep analytics to track both user actions and bugs
-- Support rapid GUI tweaking iterations and fast build+deploy process to facilitate developer+designer 'pair programming'
-- Support efficient unit (and integration) testing (black box? white box?) with mocking (only platform classes? all classes?). Property based testing? (generating data sets to test against)
-- Will be released as early as possible and greatly evolve during their lifespan with frequent updates delivered to the users
+- *Will be released as early as possible and greatly evolve during their lifespan with frequent updates delivered to the users*
   - Update experience should be as smooth as possible with automatic data and settings migrations when necessary
   - The apps can't require extensive testing periods before updates, but try to make it up with fast reaction times to defects that get into production.
-  -   The app needs to gracefully handle unhandled exceptions from secondary features (such as ads, logging, notifications). However, it is important that these events are logged and sent to an analytics backend.
-  -   Logged errors and crashes need to be available to the developer asap.
-  -   StackTraces and other error data needs to be as accurate as possible. It should include information on how to reproduce the event in debuggable environment.
+  - The app needs to gracefully handle unhandled exceptions from secondary features (such as ads, logging, notifications). However, it is important that these events are logged and sent to an analytics backend.
+  - Logged errors and crashes need to be available to the developer asap.
+  - StackTraces and other error data needs to be as accurate as possible. It should include information on how to reproduce the event in debuggable environment.
 
 ### Non-functional ###
 
@@ -58,9 +55,13 @@ This section lists the functional and non-functional requirements that the apps 
 - Support continuous integration (visual studio online?)
 - Can be realistically distributed via a 4G connection
 - Have a memory footprint less than ~180 MB
-- Doesn't use excessive amounts of disk space (keep track of usage)
+- Don't use excessive amounts of disk space (keep track of usage)
+- Support rapid GUI tweaking iterations and fast build+deploy process to facilitate developer+designer 'pair programming'
+- Support efficient unit (and integration) testing (black box? white box?) with mocking (only platform classes? all classes?). Property based testing? (generating data sets to test against)
 
-### Optional requirements ###  
+### Optional requirements ###
+*The apps might need to*
+
 - R3: Implement different GUIs and navigation structures for different devices (WP, Win 8, (Xbox One, iOS and Android with Xamarin))
 - Handle authentication
   - The requirements vary from just blocking pages from unauthenticated users to more fine grained access control to the data (possible already dowloaded into the app)
