@@ -5,14 +5,17 @@ Repository for documentation and implementation of a reference architecture for 
 
 -----------------------------
 
-THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
-- R1: Start up fast enough
-- Present the user with top of the line visual quality and fluidity (constantly good framerate)
-- Let user navigate between pages (handling backstack and passing parameters from page to page)
-  - Backstack is not always simpile chronological stack (eg. when deep linking into specific page, back navigation takes user to (main) page), also some apps might use hierarchical back stack rather than chronological one)
-- Can show popups when required
-- Dialogs that pass the user chosen answer back to host
-- Need to be distributable as commercial closed source (3rd party component licenses)
+## Requirements ##
+
+This section lists the functional and non-functional requirements that the apps build using the reference architecture are expected to have.
+
+### Functional ###
+
+*The apps will..*
+
+- Let user navigate between pages (handling backstack and passing state from page to page)
+  - Backstack is not always simple chronological stack (eg. when deep linking into specific page, back navigation takes user to (main) page), also some apps might use hierarchical back stack rather than chronological one)
+- Show popups and dialogs: that pass the user chosen answer back to host
 - R2: Support easy optimization for different screen resolutions and differences in aspect ratios
   - Assets
   - Font sizes
@@ -37,13 +40,8 @@ THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
 - Can show a progress indicator to the user while the backend request and parsing of the data is in progress
   - Ideally a progress bar
 - Implement deep analytics to track both user actions and bugs
-- Can be efficiently developed and maintained by varying number of developers with varying leves of expertise and experience.
 - Support rapid GUI tweaking iterations and fast build+deploy process to facilitate developer+designer 'pair programming'
 - Support efficient unit (and integration) testing (black box? white box?) with mocking (only platform classes? all classes?). Property based testing? (generating data sets to test against)
-- Support continuous integration (visual studio online?)
-- Can be realistically distributed via a 4G connection
-- Have a memory footprint less than ~180 MB
-- Doesn't use excessive amounts of disk space (keep track of usage)
 - Will be released as early as possible and greatly evolve during their lifespan with frequent updates delivered to the users
   - Update experience should be as smooth as possible with automatic data and settings migrations when necessary
   - The apps can't require extensive testing periods before updates, but try to make it up with fast reaction times to defects that get into production.
@@ -51,7 +49,18 @@ THE REFERENCE ARCHITECTURE IS AIMED FOR APPS THAT:
   -   Logged errors and crashes need to be available to the developer asap.
   -   StackTraces and other error data needs to be as accurate as possible. It should include information on how to reproduce the event in debuggable environment.
 
-ADDITIONALLY THE APPS MIGHT:  
+### Non-functional ###
+
+- R1: Start up fast enough
+- Present the user with top of the line visual quality and fluidity (constantly good framerate)
+- Need to be distributable as commercial closed source (3rd party component licenses)
+- Can be efficiently developed and maintained by varying number of developers with varying leves of expertise and experience.
+- Support continuous integration (visual studio online?)
+- Can be realistically distributed via a 4G connection
+- Have a memory footprint less than ~180 MB
+- Doesn't use excessive amounts of disk space (keep track of usage)
+
+### Optional requirements ###  
 - R3: Implement different GUIs and navigation structures for different devices (WP, Win 8, (Xbox One, iOS and Android with Xamarin))
 - Handle authentication
   - The requirements vary from just blocking pages from unauthenticated users to more fine grained access control to the data (possible already dowloaded into the app)
@@ -72,13 +81,19 @@ THE APPS ARE UNLIKELY TO:
 - Be designed by the developer(s) themselves
 - Be mission critical: Defects are unlikely to put anyone's health at risk
 
+## Guidelines ##
+
 THESE REQUIREMENTS LEAD INTO THE FOLLOWING GUIDELINES [Id / Responded requirements : Guideline]:
 - G1 / R3, R4.4, R4.5: Follow strict separation of UI, bussiness logic, and data access
 - G2 / R4.4, R4.5: Support easy utilization of bundled fake API responses
 - Use the built in Visual Studio designer with design time data
 
+## Architecture ##
+
 WHICH LEAD INTO THE FOLLOWING WP/WIN 8 ARCHITECHTURE (Patterns, frameworks, libraries) [Implemented Guideline / Thing : (rationale)]:
 - G1 / Follow MVVM and use MVVMCross: MVVM Seperates the UI-layer and MVVMCross is designed to work with Xamarin
+
+## Implementation ##
 
 WHICH IS MOST EASILY IMPLEMENTED BY USING THE FOLLOWING TOOLS:
 - Visual Studio 2013
