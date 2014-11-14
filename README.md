@@ -5,9 +5,9 @@ Repository for documentation and implementation of a reference architecture for 
 
 -----------------------------
 
-## Requirements ##
+## Scope ##
 
-This section lists the functional and non-functional requirements that the apps build using the reference architecture are expected to have.
+This section describes the app context to which the architecture is supposed to match ideally to. It lists the mandatory and optional functional and non-functional requirements that the apps have. It goes beyond just listing the requirements by discussing them in depth.
 
 ### Functional ###
 *The apps will..*
@@ -20,11 +20,11 @@ Dialogs and popups might be implemented using the platform UI or a custom one. T
 
 #### RF3: Support easy optimization for different screen resolutions and differences in aspect ratios ####
 Optimizations should be optional and in case an optimization is not found, a fallback should be used.
-##### RF3.1 Assets ######
-###### RF3.2 Font sizes ######
-###### RF3.3 Seperate pages and layouts for different device categories ######
+##### RF3.1 Assets #####
+##### RF3.2 Font sizes #####
+##### RF3.3 Seperate pages and layouts for different device categories #####
 
-##### RF4: Get data from a backend ####
+#### RF4: Get data from a backend ####
   - R4.1: Multiple backends (with different data formats) might be used
   - R4.2: Most likely json/xml from a restful web service
   - R4.3: In most cases caching the data and falling back to the cached data when disconnected is required
@@ -38,7 +38,7 @@ Optimizations should be optional and in case an optimization is not found, a fal
   - Show a progress indicator to the user while the backend request and parsing of the data is in progress
    - Ideally a progress bar
    
-##### RF5: Parse the data into model objects and setup references between them ####
+#### RF5: Parse the data into model objects and setup references between them ####
   - In some cases it is worthwhile to parse from the stream while the data is still being downloaded
     - However, in some cases the response data might not allow starting to parse before it has been fully loaded (data order)
   - In some cases data in memory needs to be partially updated from the downloaded data. In these cases it is important that the updates get pushed to the UI.
@@ -86,31 +86,19 @@ The apps can't require extensive testing periods before updates, but try to make
 - Want to conserve battery by bundling network requests (for background tasks?)
 - Want to be compiled with .NET Native for better performance
 
+### Out of scope ###
+The following items are things on which delibirate compromises can be made in favor of the mandatory or optional requirements listed above. 
+
 THE APPS ARE UNLIKELY TO:
 - Have automated UI tests
 - Require extremely low input or update latency throughout the app (game -like)
 - Have a development team larger than three developers
 - Be implemented as HTML-hybrid apps
-- Be designed by the developer(s) themselves
+- Be solely designed by the developer(s) themselves
 - Be mission critical: Defects are unlikely to put anyone's health at risk
 
-## Guidelines ##
-
-THESE REQUIREMENTS LEAD INTO THE FOLLOWING GUIDELINES [Id / Responded requirements : Guideline]:
-- G1 / R3, R4.4, R4.5: Follow strict separation of UI, bussiness logic, and data access
-- G2 / R4.4, R4.5: Support easy utilization of bundled fake API responses
-- Use the built in Visual Studio designer with design time data
-
-## Architecture ##
-
-WHICH LEAD INTO THE FOLLOWING WP/WIN 8 ARCHITECHTURE (Patterns, frameworks, libraries) [Implemented Guideline / Thing : (rationale)]:
-- G1 / Follow MVVM and use MVVMCross: MVVM Seperates the UI-layer and MVVMCross is designed to work with Xamarin
+## The architecture ##
+This section describes the ideal architecture for the scope defined above in natural language. It lists, describes, and arguments patterns, frameworks, and libraries that should ideally be used in todays bussiness and technical environment. It explains how each of the mentioned items help to fullfill the requirements and how they tie in and can be used together.
 
 ## Implementation ##
-
-WHICH IS MOST EASILY IMPLEMENTED BY USING THE FOLLOWING TOOLS:
-- Visual Studio 2013
-- NuGet..
-- ..
-
-SOLUTION TEMPLATE: ...
+This section presents actual project and solution templates that can be used to help implementing an app that follows the architecture defined in the previous section. It gives practical how-to's, tips, and discusses possible issues and workarounds.
