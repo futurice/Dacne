@@ -7,7 +7,7 @@ Repository for documentation and implementation of a reference architecture for 
 
 ## Scope ##
 
-This section describes the app context to which the architecture is supposed to match ideally to. It lists the mandatory and optional functional and non-functional requirements that the apps have. It goes beyond just listing the requirements by discussing them in depth.
+This section describes the app context to which the architecture is supposed to match ideally to. It lists the mandatory and optional functional and non-functional requirements that the apps have. It goes beyond just listing the requirements by discussing them and possible solutions in depth.
 
 ### Functional ###
 *The apps will..*
