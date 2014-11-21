@@ -40,6 +40,7 @@ Optimizations should be optional and in case an optimization is not found, a fal
   - Show a progress indicator to the user while the backend request and parsing of the data is in progress
    - Ideally a progress bar
  - Show error notifications for user and allow retrying individual requests
+ - Supports easy mocking of response data and errors from unit tests
    
 (Architectural solutions are being explored by Olli-Matti Saario)
    
