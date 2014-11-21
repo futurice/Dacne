@@ -13,7 +13,9 @@ This section describes the app context to which the architecture is supposed to 
 *The apps will..*
 
 #### RF1: Let user navigate between pages #### 
-Needs to handle backstack and passing state from page to page, ideally in a type-safe way. Backstack is not always simple chronological stack. For example when deep linking into a specific page, it might be necessary to make back navigation take the user to the applications main page. Also, some apps might in some cases use hierarchical back stack rather than chronological one.
+Needs to handle backstack and passing state from page to page, ideally in a type-safe way. Backstack is not always simple chronological stack. For example when deep linking into a specific page, it might be necessary to make back navigation take the user to the applications main page. Also, some apps might in some cases use hierarchical back stack rather than chronological one. In some cases it might be required to be able to serialize the backstack and return to the same state later (tombstoning).
+
+(Architectural solutions are being explored by Antti Ahvenlampi)
 
 #### RF2: Show popups and dialogs ####
 Dialogs and popups might be implemented using the platform UI or a custom one. They might be fullscreen or modular and might need to block interactions with the underlaying page. They might need to pass the user chosen answer back to the invoker. Additionally, 'global' UI elements, such as an appbar, might need to be hidden or modified when a popup is shown.
@@ -37,6 +39,9 @@ Optimizations should be optional and in case an optimization is not found, a fal
    - Requests priorization
   - Show a progress indicator to the user while the backend request and parsing of the data is in progress
    - Ideally a progress bar
+ - Show error notifications for user and allow retrying individual requests
+   
+(Architectural solutions are being explored by Olli-Matti Saario)
    
 #### RF5: Parse the data into model objects and setup references between them ####
   - In some cases it is worthwhile to parse from the stream while the data is still being downloaded
@@ -44,6 +49,8 @@ Optimizations should be optional and in case an optimization is not found, a fal
   - In some cases data in memory needs to be partially updated from the downloaded data. In these cases it is important that the updates get pushed to the UI.
   - In some cases it is worthwhile to aim for pushing the parsed objects (or their carried changes) into the UI ASAP, while the downloading and parsing might still be ongoing.
     - Needs to be able to recover if downloading response data can not be fully completed (load previous succesfull response)
+
+(Architectural solutions are being explored by Jarno Montonen)
 
 #### Implement deep analytics to track both user actions and bugs ####
 
