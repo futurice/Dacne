@@ -41,6 +41,7 @@ Optimizations should be optional and in case an optimization is not found, a fal
    - Ideally a progress bar
  - Show error notifications for user and allow retrying individual requests
  - Supports easy mocking of response data and errors from unit tests
+ - Might want to conserve battery by bundling network requests (for background tasks?)
    
 (Architectural solutions are being explored by Olli-Matti Saario)
    
@@ -60,11 +61,20 @@ Update experience should be as smooth as possible with automatic data and settin
 The apps can't require extensive testing periods before updates, but try to make it up with fast reaction times to defects that get into production. The app needs to gracefully handle unhandled exceptions from secondary features (such as ads, logging, notifications). However, it is important that these events are logged and sent to an analytics backend.
   - Logged errors and crashes need to be available to the developer asap.
   - StackTraces and other error data needs to be as accurate as possible. It should include information on how to reproduce the event in debuggable environment.
- 
-#### Will be released as MVP as soon as possible ####
 
-#### Greatly evolve during their lifespan #### 
+#### (optional) Implement different GUIs and navigation structures for different devices (WP, Win 8, (Xbox One, iOS and Android with Xamarin)) ####
 
+#### (optional) Handle authentication ####
+
+- The requirements vary from just blocking pages from unauthenticated users to more fine grained access control to the data (possible already dowloaded into the app)
+- In some cases registration and login are handled by third parties, and third party implementations, such as facebook, web view navigated to a web page implemented by a third party etc..
+- In some cases login and registration UIs are implemented by the app, in which cases efficient form handling with validation, hints and such is important.
+
+#### (optional) Push new data or updates to the received data to the backend ####
+
+- In some cases it is required to be able to store the changes on the device between sessions (and handle possible 'merge' conflicts when syncing)
+
+#### (optional) Be localized to multiple languages  ####
 
 ### Non-functional ###
 
@@ -78,21 +88,10 @@ The apps can't require extensive testing periods before updates, but try to make
 - Don't use excessive amounts of disk space (keep track of usage)
 - Support rapid GUI tweaking iterations and fast build+deploy process to facilitate developer+designer 'pair programming'
 - Support efficient unit (and integration) testing (black box? white box?) with mocking (only platform classes? all classes?). Property based testing? (generating data sets to test against)
-
-### Optional requirements ###
-*The apps might need to*
-
-- R3: Implement different GUIs and navigation structures for different devices (WP, Win 8, (Xbox One, iOS and Android with Xamarin))
-- Handle authentication
-  - The requirements vary from just blocking pages from unauthenticated users to more fine grained access control to the data (possible already dowloaded into the app)
-  - In some cases registration and login are handled by third parties, and third party implementations, such as facebook, web view navigated to a web page implemented by a third party etc..
-  - In some cases login and registration UIs are implemented by the app, in which cases efficient form handling with validation, hints and such is important.
-- Push new data or updates to the received data to the backend
-  - In some cases it is required to be able to store the changes on the device between sessions (and handle possible 'merge' conflicts when syncing)
-- (Code up to view models might be required to be able to run on iOS and Android with Xamarin)
-- Be localized to multiple languages
-- Want to conserve battery by bundling network requests (for background tasks?)
-- Want to be compiled with .NET Native for better performance
+- Will be released as MVP as soon as possible
+- Greatly evolve during their lifespan
+- (optional) Code up to view models might be required to be able to run on iOS and Android with Xamarin
+- (optional) Want to be compiled with .NET Native for better performance
 
 ### Out of scope ###
 The following items are things on which delibirate compromises can be made in favor of the mandatory or optional requirements listed above. 
