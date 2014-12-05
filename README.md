@@ -12,29 +12,20 @@ This section describes the app context to which the architecture is supposed to 
 ### Functional
 *The apps will..*
 
-#### RF1: Let user navigate between pages
+#### Let user navigate between pages
 Needs to handle backstack and passing state from page to page, ideally in a type-safe way. Backstack is not always simple chronological stack. For example when deep linking into a specific page, it might be necessary to make back navigation take the user to the applications main page. Also, some apps might in some cases use hierarchical back stack rather than chronological one. In some cases it might be required to be able to serialize the backstack and return to the same state later (tombstoning).
 
-(Architectural solutions are being explored by Antti Ahvenlampi)
+_(Architectural solutions are being explored by Antti Ahvenlampi)_
 
-#### RF2: Show popups and dialogs
-Dialogs and popups might be implemented using the platform UI or a custom one. They might be fullscreen or modular and might need to block interactions with the underlaying page. They might need to pass the user chosen answer back to the invoker. Additionally, 'global' UI elements, such as an appbar, might need to be hidden or modified when a popup is shown.
-
-#### RF3: Support easy optimization for different screen resolutions and differences in aspect ratios
-Optimizations should be optional and in case an optimization is not found, a fallback should be used.
-##### RF3.1 Assets
-##### RF3.2 Font sizes
-##### RF3.3 Seperate pages and layouts for different device categories
-
-#### RF4: Get data from a backend
-  - R4.1: Multiple backends (with different data formats) might be used
-  - R4.2: Most likely json/xml from a restful web service
-  - R4.3: In most cases caching the data and falling back to the cached data when disconnected is required
-    - R4.3.1: Clearing / expiring the cache needs to be supported as well
-  - R4.4: The backend, it's APIs, or the format of the data returned might change. The architecture needs to be easily adaptable to the changes.
-  - R4.5: The APIs or the format provided might not be ideal for the app's object model. In many cases just mapping the data into model classes is not ideal. The architecture needs to be able to map any kind of backend into the object model that is ideal for the app. (Architecture needs to support changes in APIs and app requirements)
-  - R4.6: Support development against wip APIs and in scenarios when the API can not be accessed
-  - R4.7: Support debugging against rare, but know API responses
+#### Get data from a backend
+  - Multiple backends (with different data formats) might be used
+  - Most likely json/xml from a restful web service
+  - In most cases caching the data and falling back to the cached data when disconnected is required
+    - Clearing / expiring the cache needs to be supported as well
+  - The backend, it's APIs, or the format of the data returned might change. The architecture needs to be easily adaptable to the changes.
+  - The APIs or the format provided might not be ideal for the app's object model. In many cases just mapping the data into model classes is not ideal. The architecture needs to be able to map any kind of backend into the object model that is ideal for the app. (Architecture needs to support changes in APIs and app requirements)
+  - Support development against wip APIs and in scenarios when the API can not be accessed
+  - Support debugging against rare, but know API responses
   - Might have multiple consequent (interrelated?) requests ongoing
    - Requests priorization
   - Show a progress indicator to the user while the backend request and parsing of the data is in progress
@@ -42,17 +33,26 @@ Optimizations should be optional and in case an optimization is not found, a fal
  - Show error notifications for user and allow retrying individual requests
  - Supports easy mocking of response data and errors from unit tests
  - Might want to conserve battery by bundling network requests (for background tasks?)
-   
-(Architectural solutions are being explored by Olli-Matti Saario)
-   
-#### RF5: Parse the data into model objects and setup references between them
+
+_(Architectural solutions are being explored by Olli-Matti Saario)_
+
+#### Parse the data into model objects and setup references between them
   - In some cases it is worthwhile to parse from the stream while the data is still being downloaded
     - However, in some cases the response data might not allow starting to parse before it has been fully loaded (data order)
   - In some cases data in memory needs to be partially updated from the downloaded data. In these cases it is important that the updates get pushed to the UI.
   - In some cases it is worthwhile to aim for pushing the parsed objects (or their carried changes) into the UI ASAP, while the downloading and parsing might still be ongoing.
     - Needs to be able to recover if downloading response data can not be fully completed (load previous succesfull response)
 
-(Architectural solutions are being explored by Jarno Montonen and Sakari Bergen)
+_(Architectural solutions are being explored by Jarno Montonen and Sakari Bergen)_
+
+#### Show popups and dialogs
+Dialogs and popups might be implemented using the platform UI or a custom one. They might be fullscreen or modular and might need to block interactions with the underlaying page. They might need to pass the user chosen answer back to the invoker. Additionally, 'global' UI elements, such as an appbar, might need to be hidden or modified when a popup is shown.
+
+#### Support easy optimization for different screen resolutions and differences in aspect ratios
+Optimizations should be optional and in case an optimization is not found, a fallback should be used.
+##### Assets
+##### Font sizes
+##### Seperate pages and layouts for different device categories
 
 #### Implement deep analytics to track both user actions and bugs
 
@@ -78,7 +78,7 @@ The apps can't require extensive testing periods before updates, but try to make
 
 ### Non-functional
 
-- R1: Start up fast enough
+- Start up fast enough
 - Present the user with top of the line visual quality and fluidity (constantly good framerate)
 - Need to be distributable as commercial closed source (3rd party component licenses)
 - Can be efficiently developed and maintained by varying number of developers with varying leves of expertise and experience.
