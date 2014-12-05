@@ -5,28 +5,28 @@ Repository for documentation and implementation of a reference architecture for 
 
 -----------------------------
 
-## Scope ##
+## Scope
 
 This section describes the app context to which the architecture is supposed to match ideally to. It lists the mandatory and optional functional and non-functional requirements that the apps have. It goes beyond just listing the requirements by discussing them and possible solutions in depth.
 
-### Functional ###
+### Functional
 *The apps will..*
 
-#### RF1: Let user navigate between pages #### 
+#### RF1: Let user navigate between pages
 Needs to handle backstack and passing state from page to page, ideally in a type-safe way. Backstack is not always simple chronological stack. For example when deep linking into a specific page, it might be necessary to make back navigation take the user to the applications main page. Also, some apps might in some cases use hierarchical back stack rather than chronological one. In some cases it might be required to be able to serialize the backstack and return to the same state later (tombstoning).
 
 (Architectural solutions are being explored by Antti Ahvenlampi)
 
-#### RF2: Show popups and dialogs ####
+#### RF2: Show popups and dialogs
 Dialogs and popups might be implemented using the platform UI or a custom one. They might be fullscreen or modular and might need to block interactions with the underlaying page. They might need to pass the user chosen answer back to the invoker. Additionally, 'global' UI elements, such as an appbar, might need to be hidden or modified when a popup is shown.
 
-#### RF3: Support easy optimization for different screen resolutions and differences in aspect ratios ####
+#### RF3: Support easy optimization for different screen resolutions and differences in aspect ratios
 Optimizations should be optional and in case an optimization is not found, a fallback should be used.
-##### RF3.1 Assets #####
-##### RF3.2 Font sizes #####
-##### RF3.3 Seperate pages and layouts for different device categories #####
+##### RF3.1 Assets
+##### RF3.2 Font sizes
+##### RF3.3 Seperate pages and layouts for different device categories
 
-#### RF4: Get data from a backend ####
+#### RF4: Get data from a backend
   - R4.1: Multiple backends (with different data formats) might be used
   - R4.2: Most likely json/xml from a restful web service
   - R4.3: In most cases caching the data and falling back to the cached data when disconnected is required
@@ -45,7 +45,7 @@ Optimizations should be optional and in case an optimization is not found, a fal
    
 (Architectural solutions are being explored by Olli-Matti Saario)
    
-#### RF5: Parse the data into model objects and setup references between them ####
+#### RF5: Parse the data into model objects and setup references between them
   - In some cases it is worthwhile to parse from the stream while the data is still being downloaded
     - However, in some cases the response data might not allow starting to parse before it has been fully loaded (data order)
   - In some cases data in memory needs to be partially updated from the downloaded data. In these cases it is important that the updates get pushed to the UI.
@@ -54,29 +54,29 @@ Optimizations should be optional and in case an optimization is not found, a fal
 
 (Architectural solutions are being explored by Jarno Montonen)
 
-#### Implement deep analytics to track both user actions and bugs ####
+#### Implement deep analytics to track both user actions and bugs
 
-#### Support frequent updates ####
+#### Support frequent updates
 Update experience should be as smooth as possible with automatic data and settings migrations when necessary
 The apps can't require extensive testing periods before updates, but try to make it up with fast reaction times to defects that get into production. The app needs to gracefully handle unhandled exceptions from secondary features (such as ads, logging, notifications). However, it is important that these events are logged and sent to an analytics backend.
   - Logged errors and crashes need to be available to the developer asap.
   - StackTraces and other error data needs to be as accurate as possible. It should include information on how to reproduce the event in debuggable environment.
 
-#### (optional) Implement different GUIs and navigation structures for different devices (WP, Win 8, (Xbox One, iOS and Android with Xamarin)) ####
+#### (optional) Implement different GUIs and navigation structures for different devices (WP, Win 8, (Xbox One, iOS and Android with Xamarin))
 
-#### (optional) Handle authentication ####
+#### (optional) Handle authentication
 
 - The requirements vary from just blocking pages from unauthenticated users to more fine grained access control to the data (possible already dowloaded into the app)
 - In some cases registration and login are handled by third parties, and third party implementations, such as facebook, web view navigated to a web page implemented by a third party etc..
 - In some cases login and registration UIs are implemented by the app, in which cases efficient form handling with validation, hints and such is important.
 
-#### (optional) Push new data or updates to the received data to the backend ####
+#### (optional) Push new data or updates to the received data to the backend
 
 - In some cases it is required to be able to store the changes on the device between sessions (and handle possible 'merge' conflicts when syncing)
 
-#### (optional) Be localized to multiple languages  ####
+#### (optional) Be localized to multiple languages
 
-### Non-functional ###
+### Non-functional
 
 - R1: Start up fast enough
 - Present the user with top of the line visual quality and fluidity (constantly good framerate)
@@ -93,7 +93,7 @@ The apps can't require extensive testing periods before updates, but try to make
 - (optional) Code up to view models might be required to be able to run on iOS and Android with Xamarin
 - (optional) Want to be compiled with .NET Native for better performance
 
-### Out of scope ###
+### Out of scope
 The following items are things on which delibirate compromises can be made in favor of the mandatory or optional requirements listed above. 
 
 THE APPS ARE UNLIKELY TO:
@@ -104,8 +104,8 @@ THE APPS ARE UNLIKELY TO:
 - Be solely designed by the developer(s) themselves
 - Be mission critical: Defects are unlikely to put anyone's health at risk
 
-## The architecture ##
+## The architecture
 This section describes the ideal architecture for the scope defined above in natural language. It lists, describes, and arguments patterns, frameworks, and libraries that should ideally be used in todays bussiness and technical environment. It explains how each of the mentioned items help to fullfill the requirements and how they tie in and can be used together.
 
-## Implementation ##
+## Implementation
 This section presents actual project and solution templates that can be used to help implementing an app that follows the architecture defined in the previous section. It gives practical how-to's, tips, and discusses possible issues and workarounds.
