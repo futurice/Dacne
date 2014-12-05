@@ -52,7 +52,7 @@ Optimizations should be optional and in case an optimization is not found, a fal
   - In some cases it is worthwhile to aim for pushing the parsed objects (or their carried changes) into the UI ASAP, while the downloading and parsing might still be ongoing.
     - Needs to be able to recover if downloading response data can not be fully completed (load previous succesfull response)
 
-(Architectural solutions are being explored by Jarno Montonen)
+(Architectural solutions are being explored by Jarno Montonen and Sakari Bergen)
 
 #### Implement deep analytics to track both user actions and bugs
 
