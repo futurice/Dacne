@@ -45,6 +45,9 @@ _(Architectural solutions are being explored by Olli-Matti Saario)_
 
 _(Architectural solutions are being explored by Jarno Montonen and Sakari Bergen)_
 
+#### Present models to the user and let the user interact with them
+Models and hierarchies of models need to be presented to the user in vastly different UIs. User will need to be able to interact with the models and in some cases modify them or show a particular model in a different view. Additionally, there might be a need to present somewhat different models in the same views or present the same model in different views. Views should be able to adapt to varying amounts of data in a model, eg. if a property is missing, a collection has zero, one, or thousand items. The views should also be able to react to changes in model data or hierarchy somewhat instantly. UI should not block while models are being loaded and constructed, but indicate the situation to the user.
+
 #### Show popups and dialogs
 Dialogs and popups might be implemented using the platform UI or a custom one. They might be fullscreen or modular and might need to block interactions with the underlaying page. They might need to pass the user chosen answer back to the invoker. Additionally, 'global' UI elements, such as an appbar, might need to be hidden or modified when a popup is shown.
 
