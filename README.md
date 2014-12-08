@@ -7,10 +7,10 @@ Repository for documentation and implementation of a reference architecture for 
 
 ## Scope
 
-This section describes the app context to which the architecture is supposed to match ideally to. It lists the mandatory and optional functional and non-functional requirements that the apps have. It goes beyond just listing the requirements by discussing them and possible solutions in depth.
+This section describes the app context to which the architecture is designed for. It lists the mandatory and optional functional and non-functional requirements that the apps have. It goes beyond just listing the requirements by discussing them and possible architectural solutions in depth.
 
 ### Functional
-*The apps will..*
+This section describes the functional requirements and possible architectural solutions to each of them. Each solutions discusses its fit to the detailed description of the functional requirement it self, and to the generic non-functional requirements. Some architectural solutions might be offered as a possible solution to multiple functional requirements. However, in these cases, they should be discussed from different angles in different requirements sections.
 
 #### Let user navigate between pages
 Needs to handle backstack and passing state from page to page, ideally in a type-safe way. Backstack is not always simple chronological stack. For example when deep linking into a specific page, it might be necessary to make back navigation take the user to the applications main page. Also, some apps might in some cases use hierarchical back stack rather than chronological one. In some cases it might be required to be able to serialize the backstack and return to the same state later (tombstoning).
