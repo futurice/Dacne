@@ -45,6 +45,16 @@ _(Architectural solutions are being explored by Olli-Matti Saario)_
 
 _(Architectural solutions are being explored by Jarno Montonen and Sakari Bergen)_
 
+##### Working with Immutable Models and Mutable View Models
+
+A proven model to work with data from backends, is to make all model objects immutable. In this model, the caching logic and can be easily encapsulated into one central location, from which all other parts of the application can retrieve the latest version of data. This cache mechanism should be designed in such a way, that its clients can always request data from it, no matter what the current state of the cache is. This means that one cache request might trigger several backend requests. The state of the model layer is thus hidden behind the model cache, and is visible only as a variable delay in fetching the data, or errors when loading data fails.
+
+In this model all explicit mutable application state should be kept in the View and ViewModel. View Models have access to the cache layer, and present their current state through properties which are bound to the UI via Data Binding. Possible communications in the direction of the backend should also be mediated by the View Model, presenting the state of the transaction to the user when necessary. Alternatively, such communication can happen in the View, depending on the nature of the request: this is a case where strictly abiding to the MVVM pattern can introduce unnecessary code bloat - don't be a slave to the pattern. 
+
+Since the View Models carry state in this model, we need to consider when they need to be invalidated. This is usually only an issue in back-navigation, when returning to a page that has been previously open. There are several ways to do this, and since navigation is a view-level action, it is sometimes simplest to implement it in the View, but could also be handled purely on a View Model level.
+
+If there is some piece of data that is constantly updating, using Rx is a good choice. Set up an IObservable in the model, and expose e.g. a ReactiveProperty hooked up to that in the View Model. The cache layer only needs to care about updating the Observable, and the View Model doesn't need to care about how or when the data is updated.
+
 #### Present models to the user and let the user interact with them
 Models and hierarchies of models need to be presented to the user in vastly different UIs. User will need to be able to interact with the models and in some cases modify them or show a particular model in a different view. Additionally, there might be a need to present somewhat different models in the same views or present the same model in different views. Views should be able to adapt to varying amounts of data in a model, eg. if a property is missing, a collection has zero, one, or thousand items. The views should also be able to react to changes in model data or hierarchy somewhat instantly. UI should not block while models are being loaded and constructed, but indicate the situation to the user.
 
