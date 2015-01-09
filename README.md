@@ -15,8 +15,6 @@ This section describes the functional requirements and possible architectural so
 #### Let user navigate between pages
 Needs to handle backstack and passing state from page to page, ideally in a type-safe way. Backstack is not always simple chronological stack. For example when deep linking into a specific page, it might be necessary to make back navigation take the user to the applications main page. Also, some apps might in some cases use hierarchical back stack rather than chronological one. In some cases it might be required to be able to serialize the backstack and return to the same state later (tombstoning).
 
-_(Architectural solutions are being explored by Antti Ahvenlampi)_
-
 #### Get data from a backend
   - Multiple backends (with different data formats) might be used
   - Most likely json/xml from a restful web service
@@ -34,16 +32,12 @@ _(Architectural solutions are being explored by Antti Ahvenlampi)_
  - Supports easy mocking of response data and errors from unit tests
  - Might want to conserve battery by bundling network requests (for background tasks?)
 
-_(Architectural solutions are being explored by Olli-Matti Saario)_
-
 #### Parse the data into model objects and setup references between them
   - In some cases it is worthwhile to parse from the stream while the data is still being downloaded
     - However, in some cases the response data might not allow starting to parse before it has been fully loaded (data order)
   - In some cases data in memory needs to be partially updated from the downloaded data. In these cases it is important that the updates get pushed to the UI.
   - In some cases it is worthwhile to aim for pushing the parsed objects (or their carried changes) into the UI ASAP, while the downloading and parsing might still be ongoing.
     - Needs to be able to recover if downloading response data can not be fully completed (load previous succesfull response)
-
-_(Architectural solutions are being explored by Jarno Montonen and Sakari Bergen)_
 
 ##### Working with Immutable Models and Mutable View Models
 
