@@ -106,6 +106,12 @@ This section describes the ideal architecture for the scope defined above in nat
 
 ### High level architecture
 
+#### Diagrams (wip)
+
+1. https://github.com/futurice/mobile-apps-reference-architecture/blob/master/diagrams/highlevel_wip_1.jpg
+2. https://github.com/futurice/mobile-apps-reference-architecture/blob/master/diagrams/highlevel_wip_2.jpg
+3. https://github.com/futurice/mobile-apps-reference-architecture/blob/master/diagrams/highlevel_wip_3.jpg
+
 ### Universal Windows Apps
 
 #### Working with Immutable Models and Mutable View Models
