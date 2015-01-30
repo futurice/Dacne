@@ -104,13 +104,42 @@ THE APPS ARE UNLIKELY TO:
 ## The architecture
 This section describes the ideal architecture for the scope defined above in natural language. It lists, describes, and arguments patterns, frameworks, and libraries that should ideally be used in todays bussiness and technical environment. It explains how each of the mentioned items help to fullfill the requirements and how they tie in and can be used together.
 
-### High level architecture
+### Data Access Layer
 
 #### Diagrams (wip)
 
 1. https://github.com/futurice/mobile-apps-reference-architecture/blob/master/diagrams/highlevel_wip_1.jpg
 2. https://github.com/futurice/mobile-apps-reference-architecture/blob/master/diagrams/highlevel_wip_2.jpg
 3. https://github.com/futurice/mobile-apps-reference-architecture/blob/master/diagrams/highlevel_wip_3.jpg
+
+#### ILoadable<IdentifierType>
+
+Each model that should be loaded needs to implement the interface.
+- get IdentifierType Identifier
+- get bool ShouldBeCached
+- get bool ShouldBeLoadedFromCache
+- set bool IsLoading
+- (set bool IsLoaded)
+- (set bool IsCached)
+- set LoadError LoadError
+
+There can ofc be a default LoadableModelBase : ILoadable<string>..
+
+Hmm.. or should the Identifier by just IComparable and implement ToString() in a meaningful way.. Probably not, as the ModelLoader might need specific id info on ILoadables to be able to create the right request and choose the right parser. However, custom Identifiers in ILoadable wouldn't be needed if it know about the model types.. 
+
+#### Error Handling
+
+Error handling in the Data Access layer is handled via the LoadError property on the ILoadable interface. The different components (Parser, CachedRequest, ModelLoader) can set an instance of LoadError created by them into the property. If there's already an error in the model instance, the existing error should be set as the InnerError of the new error. 
+
+For data load operation retrying LoadError class has an Retry delegate that can be set when the instance is created. In most common case, for example, ModelRepository would notice that model loading operation ended and an error was set to the model instance (by some of the components in the load chain), and would replace that error with a new error that has the old error as it's inner error, and the ModelRepository's initial load operation as the retry delegate. 
+
+#### Parsers
+
+Parsers are implemented for each data API and 'set' to the data access layer's (custom)ModelLoader. They use Model Repository's methods to get (create new) model instances when necessary and set their properties.
+
+#### Caching
+
+The ILoadable interface exposes ShouldBeCached and ShouldBeLoaded from cache getters. Cached request uses these getters to determine whether a request should be cached or not, as well as whether the request should be loaded from cache (if exists) or not.
 
 ### Universal Windows Apps
 
