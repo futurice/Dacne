@@ -7,10 +7,10 @@ Repository for documenting a reference architecture for mobile apps build by Fut
 
 ## Scope
 
-This section describes the app context to which the architecture is designed for. It lists the mandatory and optional functional and non-functional requirements that the apps have. It goes beyond just listing the requirements by discussing them and possible architectural solutions in depth.
+This section describes the app context to which the architecture is designed for. It lists the mandatory and optional functional and non-functional requirements that the apps have. It goes beyond just listing the requirements by discussing them and the possible architectural solutions in depth.
 
 ### Functional
-This section describes the functional requirements and possible architectural solutions to each of them. Each solutions discusses its fit to the detailed description of the functional requirement it self, and to the generic non-functional requirements. Some architectural solutions might be offered as a possible solution to multiple functional requirements. However, in these cases, they should be discussed from different angles in different requirements sections.
+This section describes the functional requirements and the possible architectural solutions for each of them. Each solution discusses its suitability to the functional requirement itself, and to all of the non-functional requirements. Some architectural solutions might be offered as a possible solution for multiple functional requirements. However, in these cases, they should be discussed from different angles in different requirements sections.
 
 #### Let user navigate between pages
 Needs to handle backstack and passing state from page to page, ideally in a type-safe way. Backstack is not always simple chronological stack. For example when deep linking into a specific page, it might be necessary to make back navigation take the user to the applications main page. Also, some apps might in some cases use hierarchical back stack rather than chronological one. In some cases it might be required to be able to serialize the backstack and return to the same state later (tombstoning).
@@ -43,7 +43,7 @@ Needs to handle backstack and passing state from page to page, ideally in a type
 Models and hierarchies of models need to be presented to the user in vastly different UIs. User will need to be able to interact with the models and in some cases modify them or show a particular model in a different view. Additionally, there might be a need to present somewhat different models in the same views or present the same model in different views. Views should be able to adapt to varying amounts of data in a model, eg. if a property is missing, a collection has zero, one, or thousand items. The views should also be able to react to changes in model data or hierarchy somewhat instantly. UI should not block while models are being loaded and constructed, but indicate the situation to the user.
 
 #### Show popups and dialogs
-Dialogs and popups might be implemented using the platform UI or a custom one. They might be fullscreen or modular and might need to block interactions with the underlaying page. They might need to pass the user chosen answer back to the invoker. Additionally, 'global' UI elements, such as an appbar, might need to be hidden or modified when a popup is shown.
+Dialogs and popups might be implemented using the platform UI or a custom one. They might be fullscreen or modular and might need to block interactions with the underlaying page. They might need to pass user's response back to the invoker. Additionally, 'global' UI elements, such as an appbar, might need to be hidden or modified when a popup is shown.
 
 #### Support easy optimization for different screen resolutions and differences in aspect ratios
 Optimizations should be optional and in case an optimization is not found, a fallback should be used.
@@ -51,15 +51,15 @@ Optimizations should be optional and in case an optimization is not found, a fal
 ##### Font sizes
 ##### Seperate pages and layouts for different device categories
 
-#### Implement deep analytics to track both user actions and bugs
+#### Implement deep analytics to track user's and the app's behavior
 
 #### Support frequent updates
-Update experience should be as smooth as possible with automatic data and settings migrations when necessary
-The apps can't require extensive testing periods before updates, but try to make it up with fast reaction times to defects that get into production. The app needs to gracefully handle unhandled exceptions from secondary features (such as ads, logging, notifications). However, it is important that these events are logged and sent to an analytics backend.
+Update experience should be as smooth as possible with automatic data and settings migrations when necessary.
+The apps can't require extensive testing periods before updates, but try to make it up with fast reaction times to defects that slip into production. The app needs to gracefully handle unhandled exceptions from secondary features (such as ads, logging, and notifications). However, it is important that these events are logged and sent to an analytics backend.
   - Logged errors and crashes need to be available to the developer asap.
   - StackTraces and other error data needs to be as accurate as possible. It should include information on how to reproduce the event in debuggable environment.
 
-#### (optional) Implement different GUIs and navigation structures for different devices (WP, Win 8, (Xbox One, iOS and Android with Xamarin))
+#### (optional) Implement different GUIs and navigation structures for different devices (phones, desktops, tablets, living room devices, head-mounted devices..)
 
 #### (optional) Handle authentication
 
@@ -79,7 +79,7 @@ The apps can't require extensive testing periods before updates, but try to make
 - Present the user with top of the line visual quality and fluidity (constantly good framerate)
 - Need to be distributable as commercial closed source (3rd party component licenses)
 - Can be efficiently developed and maintained by varying number of developers with varying leves of expertise and experience.
-- Support continuous integration (visual studio online?)
+- Support continuous integration
 - Can be realistically distributed via a 4G connection
 - Have a memory footprint less than ~180 MB
 - Don't use excessive amounts of disk space (keep track of usage)
@@ -102,7 +102,7 @@ THE APPS ARE UNLIKELY TO:
 - Be mission critical: Defects are unlikely to put anyone's health at risk
 
 ## The architecture
-This section describes the ideal architecture for the scope defined above in natural language. It lists, describes, and arguments patterns, frameworks, and libraries that should ideally be used in todays bussiness and technical environment. It explains how each of the mentioned items help to fullfill the requirements and how they tie in and can be used together.
+This section describes the ideal architecture for the scope defined above in natural language. It lists, describes, and arguments patterns, frameworks, and libraries that should ideally be used in todays bussiness and technical environment. It explains how each of the mentioned items help to fulfill the requirements and how they tie in and can be used together.
 
 ### Data Access Layer
 
