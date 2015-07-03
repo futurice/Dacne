@@ -155,3 +155,12 @@ If there is some piece of data that is constantly updating, using Rx is a good c
 
 ## Implementation
 This section presents actual platform specific project and solution templates that can be used to help implementing an app that follows the architecture defined in the previous section. It gives practical how-to's, tips, and discusses possible issues and workarounds.
+
+### .NET Frameworks
+
+- Caliburn.Micro: "Magic Driven Development"
+- MVVMLight: Not the most active anymore
+- MVVMCross: Mature and does the job
+- ReactiveUI: The new guy integrating with reactive extensions
+- Prism: Started at Microsoft as a way to build modular software. Recently moved into OS community and started to bring in MVVM specific stuff.
+- Catel: A massive but modular end-to-end MVVM (and even ASP.NET MVC). Actively developed, but only by a one guy.
