@@ -1,1 +1,1 @@
-This is the Windows Universal Platform Implementation of the Futurice's Mobile Apps Reference Architecture.
+This is the Universal Windows Platform Implementation of the Futurice's Mobile Apps Reference Architecture.
