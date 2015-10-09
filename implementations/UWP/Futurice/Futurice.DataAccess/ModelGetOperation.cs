@@ -4,11 +4,11 @@ namespace Futurice.DataAccess
 {
     public class ModelGetOperation<T> : Operation<T>
     {
-        public ModelGetOperation(Func<ModelId, IObservable<OperationState<T>>> begin, ModelId id) : base(() => begin(id))
+        public ModelGetOperation(Func<ModelIdentifier, IObservable<OperationState<T>>> begin, ModelIdentifier id) : base(() => begin(id))
         {
             Id = id;
         }
         
-        public ModelId Id { get; private set; }
+        public ModelIdentifier Id { get; private set; }
     }
 }

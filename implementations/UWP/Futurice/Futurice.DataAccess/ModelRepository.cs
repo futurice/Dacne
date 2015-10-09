@@ -17,15 +17,18 @@ namespace Futurice.DataAccess
             _loader = loader;
         }
 
-        public ModelGetOperation<T> Get<T>(ModelId id) where T : class
+        public ModelGetOperation<T> Get<T>(ModelIdentifier id) where T : class
         {
-            
-            return new ModelGetOperation<T>((_) => {
-                var operation = _loader.Load(id);
-                var states = operation.Begin();
-                
-                return states.Select(modelsState => new OperationState<T>(modelsState.Result as T, modelsState.Progress, modelsState.Error));
-            }, id);
+
+            return new ModelGetOperation<T>(GetModel<T>, id);
+        }
+
+        private IObservable<OperationState<T>> GetModel<T>(ModelIdentifier id) where T : class
+        {
+            var operation = _loader.Load(id);
+            var states = operation.Begin();
+
+            return states.Select(modelsState => new OperationState<T>(modelsState.Result as T, modelsState.Progress, modelsState.Error));
         }
     }
 }

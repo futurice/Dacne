@@ -11,11 +11,11 @@ namespace Futurice.DataAccess
     public abstract class ModelLoader
     {
 
-        protected abstract DataLoader PickLoader(ModelId id);
+        protected abstract DataLoader PickLoader(ModelIdentifier id);
 
-        protected abstract IParser PickParser(ModelId id);
+        protected abstract IParser PickParser(ModelIdentifier id);
 
-        public ModelsLoadOperation Load(ModelId id)
+        public ModelsLoadOperation Load(ModelIdentifier id)
         {
             return new ModelsLoadOperation(() => {
                 var loader = PickLoader(id);

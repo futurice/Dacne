@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Futurice.DataAccess;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -22,6 +23,9 @@ namespace SampleApplication
     /// </summary>
     sealed partial class App : Application
     {
+
+        public static ModelRepository Repository { get; private set; }
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -33,6 +37,9 @@ namespace SampleApplication
                 Microsoft.ApplicationInsights.WindowsCollectors.Session);
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            
+            Repository = new ModelRepository(new ModelLoader());
+
         }
 
         /// <summary>
