@@ -10,5 +10,6 @@ namespace Futurice.DataAccess
         }
         
         public ModelIdentifier Id { get; private set; }
+
     }
 }

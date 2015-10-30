@@ -5,11 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
+using System.Reactive.Subjects;
 
 namespace Futurice.DataAccess
 {
-    public class ModelRepository
-    {
+    public abstract class ModelRepository
+    { 
+        protected abstract T GetFromMemory<T>(ModelIdentifier id) where T : class;
+
         private readonly ModelLoader _loader;
 
         public ModelRepository(ModelLoader loader)
@@ -17,18 +21,27 @@ namespace Futurice.DataAccess
             _loader = loader;
         }
 
-        public ModelGetOperation<T> Get<T>(ModelIdentifier id) where T : class
-        {
+        private Dictionary<ModelIdentifier, object> operations = new Dictionary<ModelIdentifier, object>();
 
-            return new ModelGetOperation<T>(GetModel<T>, id);
+        public IObservable<OperationState<T>> Get<T>(ModelIdentifier id, CancellationToken cancellation = default(CancellationToken)) where T : class
+        {
+            object operation = null;
+            if (operations.TryGetValue(id, out operation)) {
+                return operation as IObservable<OperationState<T>>;
+            }
+
+            var newOperation = GetModel<T>(id);
+            operations[id] = newOperation;
+            newOperation.Connect();
+            return newOperation;
         }
 
-        private IObservable<OperationState<T>> GetModel<T>(ModelIdentifier id) where T : class
+        private IConnectableObservable<OperationState<T>> GetModel<T>(ModelIdentifier id) where T : class
         {
             var operation = _loader.Load(id);
-            var states = operation.Begin();
-
-            return states.Select(modelsState => new OperationState<T>(modelsState.Result as T, modelsState.Progress, modelsState.Error));
+            return operation
+                .Select(modelsState => new OperationState<T>(modelsState.Result as T, modelsState.Progress, modelsState.Error))
+                .Replay();
         }
     }
 }

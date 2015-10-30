@@ -14,6 +14,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Reactive.Linq;
+using System.Threading;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -36,17 +37,35 @@ namespace SampleApplication
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            var operation = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"));
-            var operationStates = operation.Begin();
+            var states = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), CancellationToken.None);
+            
+            // Option A
+            
+            /*
+            states.OnProgress(_ => Progress = _ + "%")
+                  .OnError(_ => Progress = "Error: " + _)
+                  .OnResult(_ => DataContext = _)
+                  .Subscribe();
+            */
 
-            operationStates
+            // Option B
+
+            states
                 .Select(state => state.Progress)
                 .Subscribe(progress => Progress = progress.ToString() + "%");
 
-            DataContext = await operationStates
+            DataContext = await states
                 .Where(state => state.Result != null)
                 .Select(state => state.Result)
                 .FirstAsync();
+            
+            
+            // Option C
+            //DataContext = await states.AwaitResultAsync();
         }
     }
+
+    //public static RepostioryExtensions
+
+    
 }

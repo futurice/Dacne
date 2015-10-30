@@ -11,19 +11,19 @@ namespace Futurice.DataAccess
     public abstract class ModelLoader
     {
 
-        protected abstract DataLoader PickLoader(ModelIdentifier id);
+        protected abstract IBuffer LoadImplementation(ModelIdentifier id);
 
-        protected abstract IParser PickParser(ModelIdentifier id);
+        protected abstract IObservable<OperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data);
 
-        public ModelsLoadOperation Load(ModelIdentifier id)
-        {
-            return new ModelsLoadOperation(() => {
-                var loader = PickLoader(id);
-                var stream = loader.Load(id);
-                var parser = PickParser(id);
-
-                return parser.Parse(stream).Begin();
-            });            
+        public IObservable<OperationState<object>> Load(ModelIdentifier id)
+        {            
+            var data = LoadImplementation(id);
+            return ParseImplementation(id, data);                        
         }
     }
+
+
+    public delegate IBuffer LoadFunction(ModelIdentifier id);
+    public delegate ModelsParseOperation ParseFunction(IBuffer stream);
+
 }
