@@ -13,10 +13,13 @@ namespace SampleApplication
     public class ModelLoader : Futurice.DataAccess.ModelLoader
     {
 
-        protected override IBuffer LoadImplementation(ModelIdentifier id)
+        protected override IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id)
         {
             // Check that this model is supposed to be loaded from the bbc
-            return new Windows.Storage.Streams.Buffer(1000);
+
+            return Observable.Generate(0, p => p <= 100, p => ++p,
+                p => new OperationState<IBuffer>(p == 100 ? new Windows.Storage.Streams.Buffer(100) : null, p),
+                p => TimeSpan.FromMilliseconds(50));
         }
 
         protected override IObservable<OperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data)
@@ -24,7 +27,7 @@ namespace SampleApplication
             // Check that this model is bbc data
             return Observable.Return(
                 new OperationState<object>(
-                    new NewsArticle() { Title = "Test article title" }, 1)
+                    new NewsArticle() { Title = "Test article title" }, 100)
                 );
         }
     }

@@ -121,6 +121,7 @@
     <Compile Include="ModelRepository.cs" />
     <Compile Include="ModelsLoadOperation.cs" />
     <Compile Include="ModelsParseOperation.cs" />
+    <Compile Include="ObservableOperationStateExtensions.cs" />
     <Compile Include="Operation.cs" />
     <Compile Include="OperationError.cs" />
     <Compile Include="OperationState.cs" />
