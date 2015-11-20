@@ -20,6 +20,7 @@ namespace Futurice.DataAccess
         {
             var loadStates = LoadImplementation(id);
 
+            object latestResult = null;
             return Observable.Merge(
                 loadStates
                     .WhereProgressChanged()
@@ -28,13 +29,10 @@ namespace Futurice.DataAccess
                 loadStates
                     .WhereResultChanged()
                     .SelectMany(state => ParseImplementation(id, state.Result))
-            );
-                   
+            )
+            .Do(s => latestResult = s.Result ?? latestResult)
+            .Select(s => new OperationState<object>(latestResult, s.Progress, s.Error, s.IsCancelled));
         }
     }
-
-
-    public delegate IBuffer LoadFunction(ModelIdentifier id);
-    public delegate ModelsParseOperation ParseFunction(IBuffer stream);
 
 }

@@ -9,13 +9,12 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="1" Text="{x:Bind Progress.Value}" HorizontalAlignment="Center" FontSize="40" />
-        <TextBlock Grid.Row="2" Text="{Binding }" HorizontalAlignment="Center" FontSize="40" />
+        <TextBlock  Text="{x:Bind Progress.Value, Mode=OneWay}" HorizontalAlignment="Center" FontSize="40" />
+
+        <StackPanel x:Name="TextBlocksPanel" Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center"/>
     </Grid>
 </Page>

@@ -5,6 +5,6 @@ namespace Futurice.DataAccess
 {
     public interface IParser
     {
-        ModelsParseOperation Parse(IBuffer stream);
+        IObservable<OperationState<object>> Parse(IBuffer stream);
     }
 }

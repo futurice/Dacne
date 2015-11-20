@@ -40,7 +40,10 @@ namespace Futurice.DataAccess
         {
             var operation = _loader.Load(id);
             return operation
-                .Select(modelsState => new OperationState<T>(modelsState.Result as T, modelsState.Progress, modelsState.Error))
+                .Select(modelsState => {
+                    T result = modelsState.Result as T;
+                    return new OperationState<T>(result, result != null ? 100 : modelsState.Progress, modelsState.Error);
+                })
                 .Replay();
         }
     }

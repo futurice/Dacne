@@ -17,6 +17,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Diagnostics;
 using Reactive.Bindings;
+using System.Threading.Tasks;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -28,9 +29,17 @@ namespace SampleApplication
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private IObservable<OperationState<NewsArticle>> _states;
+
         public MainPage()
         {
             this.InitializeComponent();
+
+            _states = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), CancellationToken.None)
+                .ObserveOn(SynchronizationContext.Current);
+                        
+            // Option B
+            Progress = _states.Select(state => state.Error?.ToString() ?? state.Result?.Title ?? state.Progress.ToString()).ToReadOnlyReactiveProperty();
 
             this.Loaded += MainPage_Loaded;
         }
@@ -42,31 +51,31 @@ namespace SampleApplication
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-            var states = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), CancellationToken.None)
-                            .ObserveOn(SynchronizationContext.Current);
-
             // Option A
+            for (int i = 0; i < 100; i++) {
+                //await Task.Delay(TimeSpan.FromMilliseconds(1000));
 
-            states.SubscribeStateChange(
-                onResult: result => DataContext = result.Title,
-                onProgress: progress => DataContext = progress.ToString() + "%",
-                onError: error => Error = error.ToString()
-            );
+                var tb = new TextBlock();
+                TextBlocksPanel.Children.Add(tb);
 
-            Progress = states.Select(state => state.Progress.ToString() + "%").ToReadOnlyReactiveProperty();
-
-            // Option B
+                int count = 0;
+                _states
+                    .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
+                    .ObserveOn(UIDispatcherScheduler.Default)
+                    .SubscribeStateChange(
+                        onResult: result => tb.Text = result.Title,
+                        onProgress: progress => tb.Text = progress.ToString() + "%",
+                        onError: error => Error = error.ToString()
+                );
+            }
+            
             /*
-            states
-                .Select(state => state.Progress)
-                .Subscribe(progress => Progress = progress.ToString() + "%");
-
             DataContext = await states
                 .Where(state => state.Result != null)
                 .Select(state => state.Result)
                 .FirstAsync();
             */
-            
+
             // Option C
             //DataContext = await states.AwaitResultAsync();
         }

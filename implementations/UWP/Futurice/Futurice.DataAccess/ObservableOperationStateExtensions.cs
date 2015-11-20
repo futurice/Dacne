@@ -23,9 +23,9 @@ namespace Futurice.DataAccess
             OperationError error = null;
             return self
                 .Subscribe(state => {
-                    TryFire(onResult, state.Result, ref result);
                     TryFire(onProgress, state.Progress, ref progress);
                     TryFire(onError, state.Error, ref error);
+                    TryFire(onResult, state.Result, ref result);
                 }
             );
         }
@@ -50,8 +50,12 @@ namespace Futurice.DataAccess
 
         public static IObservable<OperationState<TResult>> WhereChanged<TResult, TProperty>(this IObservable<OperationState<TResult>> self, Func<OperationState<TResult>, TProperty> selector)
         {
-            TProperty oldValue = default(TProperty);
-            return self.Where(state => HasChanged(ref oldValue, selector(state)));
+            TProperty def = default(TProperty);
+            TProperty oldValue = def;
+            return self.Where(state => {
+                var newValue = selector(state);
+                return !Object.Equals(newValue, def) && HasChanged(ref oldValue, newValue);
+            });
         }
 
         public static IObservable<OperationState<TResult>> WhereResultChanged<TResult>(this IObservable<OperationState<TResult>> self)
