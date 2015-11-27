@@ -7,9 +7,64 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Reactive.Subjects;
+using System.Collections.Concurrent;
 
 namespace Futurice.DataAccess
 {
+    public class ModelIdentifierComparer : IEqualityComparer<ModelIdentifier>
+    {
+        public bool Equals(ModelIdentifier x, ModelIdentifier y)
+        {
+            return x.Equals(y);
+        }
+
+        public int GetHashCode(ModelIdentifier obj)
+        {
+            return obj.GetHashCode();
+        }
+    }
+
+    class OperationKey
+    {
+        public readonly ModelIdentifier Identifier;
+        public readonly ModelSource Source;
+
+        public OperationKey(ModelIdentifier identifier, ModelSource source)
+        {
+            Identifier = identifier;
+            Source = source;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as OperationKey;
+            return Identifier.Equals(other.Identifier) && Source.Equals(other.Source);
+        }
+
+        public override int GetHashCode()
+        {
+            return Identifier.GetHashCode() + 3 * Source.GetHashCode();
+        }
+    }
+
+    public enum SourcePreference
+    {
+        Unknown,
+        Server,
+        Cache,
+        ServerWithCacheFallback,
+        CacheWithServerFallback,
+        FirstCacheThenServer,
+    }
+    
+    public enum ModelSource
+    {
+        Unknown,
+        Memory,
+        Disk,
+        Network
+    }
+
     public abstract class ModelRepository
     { 
         protected abstract T GetFromMemory<T>(ModelIdentifier id) where T : class;
@@ -20,25 +75,34 @@ namespace Futurice.DataAccess
         {
             _loader = loader;
         }
+        
+        private ConcurrentDictionary<OperationKey, object> operations = new ConcurrentDictionary<OperationKey, object>();
 
-        private Dictionary<ModelIdentifier, object> operations = new Dictionary<ModelIdentifier, object>();
-
-        public IObservable<OperationState<T>> Get<T>(ModelIdentifier id, CancellationToken cancellation = default(CancellationToken)) where T : class
+        public IObservable<OperationState<T>> Get<T>(ModelIdentifier id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken cancellation = default(CancellationToken)) where T : class
         {
-            object operation = null;
-            if (operations.TryGetValue(id, out operation)) {
-                return operation as IObservable<OperationState<T>>;
+
+            switch (source) {
+                case SourcePreference.Cache:
+                    var result = GetFromMemory<T>(id);                    
+                    return result != null ? Observable.Return<OperationState<T>>(new OperationState<T>(result, 100)) : Get<T>(id, ModelSource.Disk);
             }
 
-            var newOperation = GetModel<T>(id);
-            operations[id] = newOperation;
-            newOperation.Connect();
-            return newOperation;
         }
 
-        private IConnectableObservable<OperationState<T>> GetModel<T>(ModelIdentifier id) where T : class
+        private IObservable<OperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken cancellation = default(CancellationToken)) where T : class
         {
-            var operation = _loader.Load(id);
+            var key = new OperationKey(id, source);
+
+            return operations.GetOrAdd(key, _ => {
+                var newOperation = GetModel<T>(id, source);
+                newOperation.Connect();
+                return newOperation;
+            }) as IObservable<OperationState<T>>;
+        }
+
+        private IConnectableObservable<OperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source) where T : class
+        {
+            var operation = _loader.Load(id, source); // .LoadFrom[ModelSource] ?
             return operation
                 .Select(modelsState => {
                     T result = modelsState.Result as T;

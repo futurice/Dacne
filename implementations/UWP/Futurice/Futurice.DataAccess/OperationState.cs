@@ -10,8 +10,9 @@ namespace Futurice.DataAccess
 
         public T Result { get; private set; }
 
+        public ModelSource ResultSource { get; private set; }
     }
-
+    
     public abstract class OperationStateBase
     {
 

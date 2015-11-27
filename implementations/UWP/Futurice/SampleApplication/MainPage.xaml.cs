@@ -35,7 +35,7 @@ namespace SampleApplication
         {
             this.InitializeComponent();
 
-            _states = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), CancellationToken.None)
+            _states = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), SourcePreference.Cache, CancellationToken.None)
                 .ObserveOn(SynchronizationContext.Current);
                         
             // Option B
@@ -53,13 +53,14 @@ namespace SampleApplication
         {
             // Option A
             for (int i = 0; i < 100; i++) {
-                //await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                await Task.Delay(TimeSpan.FromMilliseconds(500));
 
                 var tb = new TextBlock();
                 TextBlocksPanel.Children.Add(tb);
 
                 int count = 0;
-                _states
+                App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), i % 2 == 0 ? SourcePreference.Cache : SourcePreference.Server, CancellationToken.None)
+                .ObserveOn(SynchronizationContext.Current)
                     .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
                     .ObserveOn(UIDispatcherScheduler.Default)
                     .SubscribeStateChange(

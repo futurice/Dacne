@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using Futurice.DataAccess;
@@ -13,13 +15,18 @@ namespace SampleApplication
     public class ModelLoader : Futurice.DataAccess.ModelLoader
     {
 
-        protected override IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id)
+        protected override IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id, SourcePreference source)
         {
             // Check that this model is supposed to be loaded from the bbc
-
-            return Observable.Generate(0, p => p <= 100, p => ++p,
-                p => new OperationState<IBuffer>(p == 100 ? new Windows.Storage.Streams.Buffer(100) : null, p),
-                p => TimeSpan.FromMilliseconds(50));
+            if (source == SourcePreference.Cache || source == SourcePreference.CacheWithServerFallback) {                
+                return Observable.Generate(0, p => p <= 100, p => ++p,
+                    p => new OperationState<IBuffer>(p == 100 ? Encoding.UTF8.GetBytes("Article from disk").AsBuffer() : null, p),
+                    p => TimeSpan.FromMilliseconds(1));
+            } else {
+                return Observable.Generate(0, p => p <= 100, p => ++p,
+                    p => new OperationState<IBuffer>(p == 100 ? Encoding.UTF8.GetBytes("Article from server").AsBuffer() : null, p),
+                    p => TimeSpan.FromMilliseconds(50));
+            }
         }
 
         protected override IObservable<OperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data)
@@ -27,7 +34,7 @@ namespace SampleApplication
             // Check that this model is bbc data
             return Observable.Return(
                 new OperationState<object>(
-                    new NewsArticle() { Title = "Test article title" }, 100)
+                    new NewsArticle() { Title = Encoding.UTF8.GetString(data.ToArray()) }, 100)
                 );
         }
     }

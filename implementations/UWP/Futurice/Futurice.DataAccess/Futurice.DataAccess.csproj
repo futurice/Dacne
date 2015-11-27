@@ -118,7 +118,6 @@
     <Compile Include="ModelLoader.cs" />
     <Compile Include="ModelRepository.cs" />
     <Compile Include="ObservableOperationStateExtensions.cs" />
-    <Compile Include="Operation.cs" />
     <Compile Include="OperationError.cs" />
     <Compile Include="OperationState.cs" />
     <Compile Include="Parser.cs" />
