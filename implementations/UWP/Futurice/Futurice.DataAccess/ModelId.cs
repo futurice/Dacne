@@ -2,6 +2,10 @@
 
 namespace Futurice.DataAccess
 {
+
+    /// <summary>
+    /// Identifies a model of a specific type.
+    /// </summary>
     public class ModelIdentifier : IEquatable<ModelIdentifier>
     {
         public ModelIdentifier(string id)

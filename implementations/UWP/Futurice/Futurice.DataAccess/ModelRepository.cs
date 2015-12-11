@@ -46,15 +46,43 @@ namespace Futurice.DataAccess
             return Identifier.GetHashCode() + 3 * Source.GetHashCode();
         }
     }
-
+    
     public enum SourcePreference
     {
+        /// <summary>
+        /// Default value that throws an exception.
+        /// </summary>
         Unknown,
+
+        /// <summary>
+        /// Requests from server only.
+        /// </summary>
         Server,
-        Cache,
+
+        /// <summary>
+        /// Requests from cache only.
+        /// </summary>
+        Cache, // Do we need to seperate between memory and disk ?
+
+        /// <summary>
+        /// Requests from server, if the request fails, requests from cache.
+        /// </summary>
         ServerWithCacheFallback,
+
+        /// <summary>
+        /// Requests from cache, if the request fails, requests from server.
+        /// </summary>
         CacheWithServerFallback,
+
+        /// <summary>
+        /// Requests from cache, when the request fails or completes, requests from server.
+        /// </summary>
         FirstCacheThenServer,
+
+        /// <summary>
+        /// Doesn't make any requests, but binds to receive the result from a request started by other operations.
+        /// </summary>
+        Delayed, // Don't start any operations
     }
     
     public enum ModelSource
@@ -65,6 +93,9 @@ namespace Futurice.DataAccess
         Server
     }
 
+    /// <summary>
+    /// A class that manages ongoing operations and bindings to their updates, manages a memory cache for the models, and has the logic to load models according to different settings.
+    /// </summary>
     public abstract class ModelRepository
     { 
         protected abstract T GetFromMemory<T>(ModelIdentifier id) where T : class;
@@ -78,6 +109,13 @@ namespace Futurice.DataAccess
         
         private ConcurrentDictionary<OperationKey, object> operations = new ConcurrentDictionary<OperationKey, object>();
 
+        /// <summary>
+        /// Takes the model information and operation settings and returns and stream of updates which can be accessed to read the progress and result of the operation.
+        /// </summary>
+        /// <typeparam name="T">Type of the model object to get.</typeparam>
+        /// <param name="id">Identifier for which to get the model object.</param>
+        /// <param name="source">Determines the sources from which the model is loaded from, or if an request should be started at all.</param>
+        /// <returns>Stream of updates from which the progress and result of the operation can be accessed from.</returns>
         public IObservable<OperationState<T>> Get<T>(ModelIdentifier id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default(CancellationToken)) where T : class
         {
 

@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace SampleApplication
 {
-    
+
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
@@ -37,7 +37,7 @@ namespace SampleApplication
 
             _states = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), SourcePreference.Cache, CancellationToken.None)
                 .ObserveOn(SynchronizationContext.Current);
-                        
+
             // Option B
             Progress = _states.Select(state => state.Error?.ToString() ?? state.Result?.Title ?? state.Progress.ToString()).ToReadOnlyReactiveProperty();
 
@@ -69,7 +69,7 @@ namespace SampleApplication
                         onError: error => Error = error.ToString()
                 );
             }
-            
+
             /*
             DataContext = await states
                 .Where(state => state.Result != null)
@@ -82,7 +82,15 @@ namespace SampleApplication
         }
     }
 
-    //public static RepostioryExtensions
+    public class RowViewModel
+    {
+        public ReadOnlyReactiveProperty<string> Progress { get; private set; }
+        
+        public void Load()
+        {
 
+        }
+
+    }
     
 }
