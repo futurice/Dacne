@@ -3,7 +3,7 @@ namespace Futurice.DataAccess
 {
     public class OperationState<T> : OperationStateBase
     {
-        public OperationState(T result, double progress = 0, OperationError error = null, bool isCancelled = false) : base(error, progress, isCancelled)
+        public OperationState(T result, double progress = 0, OperationError error = null, bool isCancelled = false, ModelSource source = ModelSource.Unknown) : base(error, progress, isCancelled)
         {
             Result = result;
         }

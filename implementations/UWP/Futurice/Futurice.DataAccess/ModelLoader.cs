@@ -12,11 +12,11 @@ namespace Futurice.DataAccess
     public abstract class ModelLoader
     {
 
-        protected abstract IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id, SourcePreference source);
+        protected abstract IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id, ModelSource source);
 
         protected abstract IObservable<OperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data);
 
-        public IObservable<OperationState<object>> Load(ModelIdentifier id, SourcePreference source)
+        public IObservable<OperationState<object>> Load(ModelIdentifier id, ModelSource source)
         {
             var loadStates = LoadImplementation(id, source);
 

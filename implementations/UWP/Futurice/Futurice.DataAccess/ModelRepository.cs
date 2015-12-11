@@ -62,7 +62,7 @@ namespace Futurice.DataAccess
         Unknown,
         Memory,
         Disk,
-        Network
+        Server
     }
 
     public abstract class ModelRepository
@@ -78,35 +78,41 @@ namespace Futurice.DataAccess
         
         private ConcurrentDictionary<OperationKey, object> operations = new ConcurrentDictionary<OperationKey, object>();
 
-        public IObservable<OperationState<T>> Get<T>(ModelIdentifier id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken cancellation = default(CancellationToken)) where T : class
+        public IObservable<OperationState<T>> Get<T>(ModelIdentifier id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default(CancellationToken)) where T : class
         {
 
             switch (source) {
                 case SourcePreference.Cache:
-                    var result = GetFromMemory<T>(id);                    
-                    return result != null ? Observable.Return<OperationState<T>>(new OperationState<T>(result, 100)) : Get<T>(id, ModelSource.Disk);
+                    var result = GetFromMemory<T>(id);
+                    return result != null ? Observable.Return(new OperationState<T>(result, 100, source: ModelSource.Memory)) : Get<T>(id, ModelSource.Disk, ct);
+
+                case SourcePreference.Server:
+                    return Get<T>(id, ModelSource.Server, ct);
+                    
+                default:
+                    throw new NotImplementedException("Unknown SourcePreference: " + source.ToString());
             }
 
         }
 
-        private IObservable<OperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken cancellation = default(CancellationToken)) where T : class
+        private IObservable<OperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
             var key = new OperationKey(id, source);
 
             return operations.GetOrAdd(key, _ => {
-                var newOperation = GetModel<T>(id, source);
+                var newOperation = GetModel<T>(id, source, ct);
                 newOperation.Connect();
                 return newOperation;
             }) as IObservable<OperationState<T>>;
         }
 
-        private IConnectableObservable<OperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source) where T : class
+        private IConnectableObservable<OperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
-            var operation = _loader.Load(id, source); // .LoadFrom[ModelSource] ?
+            var operation = _loader.Load(id, source);
             return operation
                 .Select(modelsState => {
                     T result = modelsState.Result as T;
-                    return new OperationState<T>(result, result != null ? 100 : modelsState.Progress, modelsState.Error);
+                    return new OperationState<T>(result, result != null ? 100 : modelsState.Progress, modelsState.Error, modelsState.IsCancelled, modelsState.ResultSource);
                 })
                 .Replay();
         }

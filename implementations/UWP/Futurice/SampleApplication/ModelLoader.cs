@@ -15,10 +15,10 @@ namespace SampleApplication
     public class ModelLoader : Futurice.DataAccess.ModelLoader
     {
 
-        protected override IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id, SourcePreference source)
+        protected override IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id, ModelSource source)
         {
             // Check that this model is supposed to be loaded from the bbc
-            if (source == SourcePreference.Cache || source == SourcePreference.CacheWithServerFallback) {                
+            if (source == ModelSource.Disk) {                
                 return Observable.Generate(0, p => p <= 100, p => ++p,
                     p => new OperationState<IBuffer>(p == 100 ? Encoding.UTF8.GetBytes("Article from disk").AsBuffer() : null, p),
                     p => TimeSpan.FromMilliseconds(1));
