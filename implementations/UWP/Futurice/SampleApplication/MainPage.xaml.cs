@@ -59,15 +59,17 @@ namespace SampleApplication
                 TextBlocksPanel.Children.Add(tb);
 
                 int count = 0;
-                App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), i % 2 == 0 ? SourcePreference.Cache : SourcePreference.Server, CancellationToken.None)
-                .ObserveOn(SynchronizationContext.Current)
-                    .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
-                    .ObserveOn(UIDispatcherScheduler.Default)
-                    .SubscribeStateChange(
-                        onResult: result => tb.Text = result.Title,
-                        onProgress: progress => tb.Text = progress.ToString() + "%",
-                        onError: error => Error = error.ToString()
-                );
+                App.Repository.Get<NewsArticle>(
+                    new ModelIdentifier("testmodelid"), 
+                    i % 2 == 0 ? SourcePreference.Cache 
+                    : SourcePreference.Server, CancellationToken.None)
+                        .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
+                        .ObserveOn(UIDispatcherScheduler.Default)
+                        .SubscribeStateChange(
+                            onResult: result => tb.Text = result.Title,
+                            onProgress: progress => tb.Text = progress.ToString() + "%",
+                            onError: error => Error = error.ToString()
+                    );
             }
 
             /*
