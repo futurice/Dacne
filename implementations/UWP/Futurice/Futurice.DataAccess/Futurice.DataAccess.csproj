@@ -114,6 +114,7 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataLoader.cs" />
     <Compile Include="ModelId.cs" />
     <Compile Include="ModelLoader.cs" />
     <Compile Include="ModelRepository.cs" />
