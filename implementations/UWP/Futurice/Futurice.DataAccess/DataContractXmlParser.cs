@@ -3,11 +3,13 @@ using System.Reactive.Subjects;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 using Windows.Storage.Streams;
 
 namespace Futurice.DataAccess
 {
-    public class DataContractXmlParser : Parser
+    public class DataContractXmlParser : SimpleParser
     {
         private readonly Type type;
 
@@ -16,22 +18,14 @@ namespace Futurice.DataAccess
             this.type = type;
         }
 
-        public override IObservable<OperationState<object>> Parse(IBuffer data)
+        protected override object ParseImplementation(IBuffer data, ModelIdentifier id)
         {
-            var subject = new Subject<OperationState<object>>();
-
-            Task.Run(() =>
+            using (var reader = XmlReader.Create(data.AsStream(), new XmlReaderSettings { IgnoreProcessingInstructions = true, DtdProcessing = DtdProcessing.Ignore }))
             {
-                try
-                {
-                    var parser = new DataContractSerializer(type);
-                    var obj = parser.ReadObject(data.AsStream());
-                    subject.OnNext(new OperationState<object>(obj, 100, null, false, ModelSource.Server));
-                    subject.OnCompleted();
-                }
-            });
-
-            return subject;
+                var parser = new DataContractSerializer(type);
+                var obj = parser.ReadObject(reader);
+                return obj;
+            }
         }
     }
 }

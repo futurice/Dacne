@@ -19,7 +19,7 @@ namespace Futurice.DataAccess
 
         public virtual bool Equals(ModelIdentifier other)
         {
-            return Id == other.Id;
+            return other != null && Id.Equals(other.Id);
         }
 
         public override int GetHashCode()

@@ -8,6 +8,8 @@ namespace SampleApplication
 {
     class NewsArticle
     {
+
+        public Uri Url { get; internal set; }
         public string Title { get; set; }
     }
 }

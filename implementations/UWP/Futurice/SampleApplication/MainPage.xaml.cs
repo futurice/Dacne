@@ -61,16 +61,16 @@ namespace SampleApplication
                 TextBlocksPanel.Children.Add(tb);
 
                 int count = 0;
-                App.Repository.Get<Rss>(
-                    new ModelIdentifier("testmodelid"), 
+                App.Repository.Get<NewsArticle>(
+                    ModelLoader.GetBbcArticleId(35836853, "world", "asia"),
                     i % 2 == 0 ? SourcePreference.Cache 
                     : SourcePreference.Server, CancellationToken.None)
                         .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
                         .ObserveOn(UIDispatcherScheduler.Default)
                         .SubscribeStateChange(
-                            onResult: result => tb.Text = result.Channel.Title,
+                            onResult: result => tb.Text = result.Title,
                             onProgress: progress => tb.Text = progress.ToString() + "%",
-                            onError: error => Error = error.ToString()
+                            onError: error => tb.Text = error.ToString()
                     );
             }
 

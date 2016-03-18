@@ -1,6 +1,5 @@
 ﻿{
   "dependencies": {
-    "LanguageExt": "1.0.0",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0",
     "Rx-Main": "2.2.5"
   },

@@ -11,7 +11,7 @@ namespace Futurice.DataAccess
 {
     public abstract class ModelLoader
     {
-        private Cache _cache;
+        private readonly Cache _cache;
 
         public ModelLoader(Cache defaultCache = null)
         {
@@ -40,7 +40,7 @@ namespace Futurice.DataAccess
 
                 case ModelSource.Disk:
                     return (cache == null) ?
-                        Observable.Return(new OperationState<IBuffer>(null, 0, new OperationError(), false, ModelSource.Disk)) :
+                        Observable.Return(new OperationState<IBuffer>(null, 0, new OperationError(message: "Disk cache not set!"), false, ModelSource.Disk)) :
                         cache.Load(id);
                 default:
                     throw new Exception("Unknown source: " + source);
@@ -52,6 +52,7 @@ namespace Futurice.DataAccess
             var loadStates = LoadData(id, source);
 
             object latestResult = null;
+            ModelIdentifier latestId = null;
             return Observable.Merge(
                 loadStates
                     .WhereProgressChanged()
@@ -61,8 +62,14 @@ namespace Futurice.DataAccess
                     .WhereResultChanged()
                     .SelectMany(state => ParseImplementation(id, state.Result))
             )
-            .Do(s => latestResult = s.Result ?? latestResult)
-            .Select(s => new OperationState<object>(latestResult, s.Progress, s.Error, s.IsCancelled));
+            .Do(s => {
+                if (s.Result != null)
+                {
+                    latestResult = s.Result;
+                    latestId = s.ResultIdentifier;
+                }
+            })
+            .Select(s => new OperationState<object>(latestResult, id.Equals(latestId) ? 100 : s.Progress, s.Error, s.IsCancelled, s.ResultSource, latestId));
         }
     }
 

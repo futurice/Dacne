@@ -1,16 +1,20 @@
 ﻿
 namespace Futurice.DataAccess
 {
-    public class OperationState<T> : OperationStateBase
+    public class OperationState<T> : OperationStateBase where T : class
     {
-        public OperationState(T result, double progress = 0, OperationError error = null, bool isCancelled = false, ModelSource source = ModelSource.Unknown) : base(error, progress, isCancelled)
+        public OperationState(T result = null, double progress = 0, OperationError error = null, bool isCancelled = false, ModelSource source = ModelSource.Unknown, ModelIdentifier id = null) : base(error, progress, isCancelled)
         {
             Result = result;
+            ResultSource = source;
+            ResultIdentifier = id;
         }
 
         public T Result { get; private set; }
 
         public ModelSource ResultSource { get; private set; }
+
+        public ModelIdentifier ResultIdentifier { get; private set; }
     }
     
     public abstract class OperationStateBase

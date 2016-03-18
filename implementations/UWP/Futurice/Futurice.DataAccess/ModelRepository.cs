@@ -101,14 +101,13 @@ namespace Futurice.DataAccess
         protected abstract T GetFromMemory<T>(ModelIdentifier id) where T : class;
 
         private readonly ModelLoader _loader;
+        private ConcurrentDictionary<OperationKey, object> operations = new ConcurrentDictionary<OperationKey, object>();
 
         public ModelRepository(ModelLoader loader)
         {
             _loader = loader;
         }
         
-        private ConcurrentDictionary<OperationKey, object> operations = new ConcurrentDictionary<OperationKey, object>();
-
         /// <summary>
         /// Takes the model information and operation settings and returns and stream of updates which can be accessed to read the progress and result of the operation.
         /// </summary>
@@ -206,9 +205,18 @@ namespace Futurice.DataAccess
             var operation = _loader.Load(id, source);
             return operation
                 .Select(modelsState => {
-                    T result = modelsState.Result as T;
-                    return new OperationState<T>(result, result != null ? 100 : modelsState.Progress, modelsState.Error, modelsState.IsCancelled, modelsState.ResultSource);
+                    // Push to memory cache?
+
+                    T result = null;
+                    ModelIdentifier resultId = null;
+                    if (id.Equals(modelsState.ResultIdentifier))
+                    {
+                        result = modelsState.Result as T;
+                        resultId = modelsState.ResultIdentifier;
+                    }
+                    return new OperationState<T>(result, modelsState.Progress, modelsState.Error, modelsState.IsCancelled, modelsState.ResultSource, resultId);
                 })
+                .TakeWhile(s => s.Progress <= 100)
                 .Replay();
         }
     }
