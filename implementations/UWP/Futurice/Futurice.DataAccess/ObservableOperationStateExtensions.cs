@@ -70,5 +70,19 @@ namespace Futurice.DataAccess
         {
             return self.WhereChanged(state => state.Progress);
         }
+
+        public static IObservable<OperationState<TResult>> WithFallback<TResult>(
+            this IObservable<OperationState<TResult>> forOperation,
+            Func<IObservable<OperationState<TResult>>> fallback)
+        {
+            IObservable<OperationState<TResult>> doFallback = forOperation
+                .WhereErrorChanged()
+                .Take(1)
+                .SelectMany(it => fallback());
+
+            return forOperation
+                .TakeWhile(it => it.Error == null)
+                .Merge(doFallback);
+        }
     }
 }

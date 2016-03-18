@@ -35,11 +35,13 @@ namespace SampleApplication
         {
             this.InitializeComponent();
 
+            /*
             _states = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), SourcePreference.Cache, CancellationToken.None)
                 .ObserveOn(SynchronizationContext.Current);
 
             // Option B
             Progress = _states.Select(state => state.Error?.ToString() ?? state.Result?.Title ?? state.Progress.ToString()).ToReadOnlyReactiveProperty();
+            */
 
             this.Loaded += MainPage_Loaded;
         }
@@ -59,14 +61,14 @@ namespace SampleApplication
                 TextBlocksPanel.Children.Add(tb);
 
                 int count = 0;
-                App.Repository.Get<NewsArticle>(
+                App.Repository.Get<Rss>(
                     new ModelIdentifier("testmodelid"), 
                     i % 2 == 0 ? SourcePreference.Cache 
                     : SourcePreference.Server, CancellationToken.None)
                         .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
                         .ObserveOn(UIDispatcherScheduler.Default)
                         .SubscribeStateChange(
-                            onResult: result => tb.Text = result.Title,
+                            onResult: result => tb.Text = result.Channel.Title,
                             onProgress: progress => tb.Text = progress.ToString() + "%",
                             onError: error => Error = error.ToString()
                     );

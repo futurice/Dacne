@@ -121,16 +121,55 @@ namespace Futurice.DataAccess
 
             switch (source) {
                 case SourcePreference.Cache:
-                    var result = GetFromMemory<T>(id);
-                    return result != null ? Observable.Return(new OperationState<T>(result, 100, source: ModelSource.Memory)) : Get<T>(id, ModelSource.Disk, ct);
+                    return GetFromCache<T>(id, ct);
 
                 case SourcePreference.Server:
                     return Get<T>(id, ModelSource.Server, ct);
-                    
+
+                case SourcePreference.ServerWithCacheFallback:
+                    return GetFromServerWithCacheFallback<T>(id, ct);
+
+                case SourcePreference.CacheWithServerFallback:
+                    return GetFromCacheWithServerFallback<T>(id, ct);
+
+                case SourcePreference.FirstCacheThenServer:
+                    return GetFirstFromCacheThenServer<T>(id, ct);
+
                 default:
                     throw new NotImplementedException("Unknown SourcePreference: " + source.ToString());
             }
+        }
 
+        private IObservable<OperationState<T>> GetFromCache<T>(ModelIdentifier id, CancellationToken ct) where T : class {
+            var result = GetFromMemory<T>(id);
+
+            return result != null ?
+                Observable.Return(new OperationState<T>(result, 100, source: ModelSource.Memory)) :
+                Get<T>(id, ModelSource.Disk, ct);
+        }
+
+        private IObservable<OperationState<T>> GetFromServerWithCacheFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        {
+            var resultFromServer = Get<T>(id, ModelSource.Server, ct);
+            return resultFromServer.WithFallback(() => GetFromCache<T>(id, ct));
+        }
+
+        private IObservable<OperationState<T>> GetFromCacheWithServerFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        {
+            var resultFromServer = GetFromCache<T>(id, ct);
+            return resultFromServer.WithFallback(() => Get<T>(id, ModelSource.Server, ct));
+        }
+
+        private IObservable<OperationState<T>> GetFirstFromCacheThenServer<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        {
+            var resultFromCache = GetFromCache<T>(id, ct)
+                .Where(it => it.Error == null && !it.IsCancelled)
+                .Select(it => new OperationState<T>(it.Result, 0.5 * it.Progress, it.Error, it.IsCancelled, it.ResultSource));
+
+            var resultFromServer = Get<T>(id, ModelSource.Server, ct)
+                .Select(it => new OperationState<T>(it.Result, 0.5 * (100 + it.Progress), it.Error, it.IsCancelled, it.ResultSource));
+
+            return resultFromCache.Merge(resultFromServer);
         }
 
         private IObservable<OperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
@@ -139,7 +178,25 @@ namespace Futurice.DataAccess
 
             return operations.GetOrAdd(key, _ => {
                 var newOperation = GetModel<T>(id, source, ct);
-                newOperation.Connect();
+
+                IDisposable connectDisposable = null;
+                IDisposable subscriptionDisposable = null;
+
+                Action onFinished = () =>
+                {
+                    object obj;
+                    operations.TryRemove(key, out obj);
+
+                    subscriptionDisposable.Dispose();
+
+                    if (connectDisposable != null)
+                    {
+                        connectDisposable.Dispose();
+                    }
+                };
+
+                subscriptionDisposable = newOperation.Subscribe(it => { }, unit => onFinished(), onFinished);
+                connectDisposable = newOperation.Connect();
                 return newOperation;
             }) as IObservable<OperationState<T>>;
         }

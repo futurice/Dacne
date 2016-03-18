@@ -3,8 +3,8 @@ using Windows.Storage.Streams;
 
 namespace Futurice.DataAccess
 {
-    public interface IParser
+    public abstract class Parser
     {
-        IObservable<OperationState<object>> Parse(IBuffer stream);
+        public abstract IObservable<OperationState<object>> Parse(IBuffer stream);
     }
 }
