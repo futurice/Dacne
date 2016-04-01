@@ -5,6 +5,6 @@ namespace Futurice.DataAccess
 {
     public interface DataLoader
     {
-        IObservable<OperationState<IBuffer>> Load(ModelIdentifier id);
+        IObservable<IOperationState<IBuffer>> Load(ModelIdentifier id);
     }
 }

@@ -21,7 +21,7 @@ namespace SampleApplication
         private ConcurrentDictionary<ModelIdentifier, IBuffer> _cache =
             new ConcurrentDictionary<ModelIdentifier, IBuffer>();
 
-        public IObservable<OperationState<IBuffer>> Load(ModelIdentifier id)
+        public IObservable<IOperationState<IBuffer>> Load(ModelIdentifier id)
         {
             IBuffer value;
 
@@ -39,13 +39,13 @@ namespace SampleApplication
 
     public class ModelLoader : Futurice.DataAccess.ModelLoader
     {
-        protected override IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id)
+        protected override IObservable<IOperationState<IBuffer>> LoadImplementation(ModelIdentifier id)
         {
             // Check that this model is supposed to be loaded from the bbc
             return new NetworkRequestHander().Get(new Uri("http://feeds.bbci.co.uk/news/rss.xml"));
         }
 
-        protected override IObservable<OperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data)
+        protected override IObservable<IOperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data)
         {
             // Use the parser for this model
             return new BbcParser().Parse(data, id);
@@ -61,7 +61,7 @@ namespace SampleApplication
     {
         private static readonly Regex ID_FROM_LINK = new Regex("[^/]*(?=#)");
 
-        protected override void ParseImplementation(IBuffer data, ModelIdentifier id, IObserver<OperationState<object>> target)
+        protected override void ParseImplementation(IBuffer data, ModelIdentifier id, IObserver<IOperationState<object>> target)
         {
             var progress = 1.0;
             target.OnNextProgress(progress);
@@ -113,7 +113,7 @@ namespace SampleApplication
             _baseUri = baseUri;
         }
 
-        public IObservable<OperationState<IBuffer>> Load(ModelIdentifier id)
+        public IObservable<IOperationState<IBuffer>> Load(ModelIdentifier id)
         {
             return Observable.Generate(0, p => p <= 100, p => ++p,
                 p => new OperationState<IBuffer>(p == 100 ? Encoding.UTF8.GetBytes("Article from server").AsBuffer() : null, p),

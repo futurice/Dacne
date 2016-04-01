@@ -29,7 +29,7 @@ namespace SampleApplication
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private IObservable<OperationState<NewsArticle>> _states;
+        private IObservable<IOperationState<NewsArticle>> _states;
 
         public MainPage()
         {

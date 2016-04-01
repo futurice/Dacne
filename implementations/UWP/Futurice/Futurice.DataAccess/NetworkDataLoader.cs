@@ -16,7 +16,7 @@ namespace Futurice.DataAccess
             this.getUriFunc = getUriFunc;
         }
 
-        public IObservable<OperationState<IBuffer>> Load(ModelIdentifier id)
+        public IObservable<IOperationState<IBuffer>> Load(ModelIdentifier id)
         {
             var uri = getUriFunc(id);
             return null;

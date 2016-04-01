@@ -109,10 +109,10 @@ namespace Futurice.DataAccess
         private readonly IMemoryCache _cache;
         private readonly ConcurrentDictionary<OperationKey, object> _ongoingOperations = new ConcurrentDictionary<OperationKey, object>();
 
-        public readonly Subject<IObservable<OperationStateBase>> _operationsObserver = new Subject<IObservable<OperationStateBase>>();
-        public readonly IObservable<IObservable<OperationStateBase>> Operations;
+        public readonly Subject<IObservable<IOperationStateBase>> _operationsObserver = new Subject<IObservable<IOperationStateBase>>();
+        public readonly IObservable<IObservable<IOperationStateBase>> Operations;
 
-        public ModelRepository(ModelLoader loader, IMemoryCache cache)
+        public ModelRepository(ModelLoader loader, IMemoryCache cache = null)
         {
             _loader = loader;
             _cache = cache;
@@ -127,7 +127,7 @@ namespace Futurice.DataAccess
         /// <param name="id">Identifier for which to get the model object.</param>
         /// <param name="source">Determines the sources from which the model is loaded from, or if an request should be started at all.</param>
         /// <returns>Stream of updates from which the progress and result of the operation can be accessed from.</returns>
-        public IObservable<OperationState<T>> Get<T>(ModelIdentifier id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default(CancellationToken)) where T : class
+        public IObservable<IOperationState<T>> Get<T>(ModelIdentifier id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default(CancellationToken)) where T : class
         {
 
             switch (source) {
@@ -151,7 +151,7 @@ namespace Futurice.DataAccess
             }
         }
 
-        private IObservable<OperationState<T>> GetFromCache<T>(ModelIdentifier id, CancellationToken ct) where T : class {
+        private IObservable<IOperationState<T>> GetFromCache<T>(ModelIdentifier id, CancellationToken ct) where T : class {
             var result = _cache?.Get<T>(id);
 
             return result != null ?
@@ -159,19 +159,19 @@ namespace Futurice.DataAccess
                 Get<T>(id, ModelSource.Disk, ct);
         }
 
-        private IObservable<OperationState<T>> GetFromServerWithCacheFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        private IObservable<IOperationState<T>> GetFromServerWithCacheFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
         {
             var resultFromServer = Get<T>(id, ModelSource.Server, ct);
             return resultFromServer.WithFallback(() => GetFromCache<T>(id, ct));
         }
 
-        private IObservable<OperationState<T>> GetFromCacheWithServerFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        private IObservable<IOperationState<T>> GetFromCacheWithServerFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
         {
             var resultFromServer = GetFromCache<T>(id, ct);
             return resultFromServer.WithFallback(() => Get<T>(id, ModelSource.Server, ct));
         }
 
-        private IObservable<OperationState<T>> GetFirstFromCacheThenServer<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        private IObservable<IOperationState<T>> GetFirstFromCacheThenServer<T>(ModelIdentifier id, CancellationToken ct) where T : class
         {
             var resultFromCache = GetFromCache<T>(id, ct)
                 .Where(it => it.Error == null && !it.IsCancelled)
@@ -183,11 +183,11 @@ namespace Futurice.DataAccess
             return resultFromCache.Merge(resultFromServer);
         }
 
-        private IObservable<OperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
+        private IObservable<IOperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
             var key = new OperationKey(id, source);
 
-            return _ongoingOperations.GetOrAdd(key, _ => {
+            return (IObservable<IOperationState<T>>)_ongoingOperations.GetOrAdd(key, _ => {
                 var newOperation = GetModel<T>(id, source, ct);
 
                 IDisposable connectDisposable = null;
@@ -211,10 +211,10 @@ namespace Futurice.DataAccess
 
                 _operationsObserver.OnNext(newOperation);
                 return newOperation;
-            }) as IObservable<OperationState<T>>;
+            });
         }
 
-        private IConnectableObservable<OperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
+        private IConnectableObservable<IOperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
             var operation = _loader.Load(id, source);
 

@@ -11,20 +11,32 @@ namespace SampleApplication
     {
         public ModelRepository(ModelLoader loader) : base(loader) { }
 
+    }
+
+    public class MemoryCache : IMemoryCache
+    {
+
         private readonly Dictionary<ModelIdentifier, NewsArticle> _articles = new Dictionary<ModelIdentifier, NewsArticle>();
 
-        protected override T GetFromMemory<T>(ModelIdentifier id)
+        public T Get<T>(ModelIdentifier id) where T : class
         {
             var type = typeof(T);
 
-            if (type == typeof(NewsArticle)) {
+            if (type == typeof(NewsArticle))
+            {
                 NewsArticle value = null;
-                if (_articles.TryGetValue(id, out value)) {
+                if (_articles.TryGetValue(id, out value))
+                {
                     return value as T;
                 }
             }
 
             return null;
+        }
+
+        public void Set<T>(ModelIdentifier id, T model) where T : class
+        {
+            //_articles[id] = model;
         }
     }
 }

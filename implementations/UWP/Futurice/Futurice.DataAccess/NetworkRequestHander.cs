@@ -7,9 +7,9 @@ namespace Futurice.DataAccess
 {
     public class NetworkRequestHander
     {
-        public IObservable<OperationState<IBuffer>> Get(Uri uri)
+        public IObservable<IOperationState<IBuffer>> Get(Uri uri)
         {
-            var subject = new Subject<OperationState<IBuffer>>();
+            var subject = new Subject<IOperationState<IBuffer>>();
             var client = new HttpClient();
 
             client.GetBufferAsync(uri).AsTask().ContinueWith(result =>

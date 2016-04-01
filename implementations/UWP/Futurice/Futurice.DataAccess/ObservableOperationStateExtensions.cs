@@ -11,13 +11,13 @@ namespace Futurice.DataAccess
 
     public static class ObservableOperationStateExtensions
     {
-        public static IObservable<OperationState<TResult>> OnResult<TResult>(this IObservable<OperationState<TResult>> self, Action<TResult> onResult) where TResult : class
+        public static IObservable<IOperationState<TResult>> OnResult<TResult>(this IObservable<IOperationState<TResult>> self, Action<TResult> onResult) where TResult : class
         {
             self.Where(state => state.Result != null).Do(state => onResult(state.Result));
             return self;
         }
 
-        public static IDisposable SubscribeStateChange<TResult>(this IObservable<OperationState<TResult>> self, Action<TResult> onResult = null, Action<double> onProgress = null, Action<OperationError> onError = null) where TResult : class
+        public static IDisposable SubscribeStateChange<TResult>(this IObservable<IOperationState<TResult>> self, Action<TResult> onResult = null, Action<double> onProgress = null, Action<OperationError> onError = null) where TResult : class
         {
             TResult result = null;
             double progress = 0;
@@ -49,7 +49,7 @@ namespace Futurice.DataAccess
             return false;
         }
 
-        public static IObservable<OperationState<TResult>> WhereChanged<TResult, TProperty>(this IObservable<OperationState<TResult>> self, Func<OperationState<TResult>, TProperty> selector) where TResult : class
+        public static IObservable<IOperationState<TResult>> WhereChanged<TResult, TProperty>(this IObservable<IOperationState<TResult>> self, Func<IOperationState<TResult>, TProperty> selector) where TResult : class
         {
             TProperty def = default(TProperty);
             TProperty oldValue = def;
@@ -59,24 +59,24 @@ namespace Futurice.DataAccess
             });
         }
 
-        public static IObservable<OperationState<TResult>> WhereResultChanged<TResult>(this IObservable<OperationState<TResult>> self) where TResult : class
+        public static IObservable<IOperationState<TResult>> WhereResultChanged<TResult>(this IObservable<IOperationState<TResult>> self) where TResult : class
         {
             return self.WhereChanged(state => state.Result);
         }
-        public static IObservable<OperationState<TResult>> WhereErrorChanged<TResult>(this IObservable<OperationState<TResult>> self) where TResult : class
+        public static IObservable<IOperationState<TResult>> WhereErrorChanged<TResult>(this IObservable<IOperationState<TResult>> self) where TResult : class
         {
             return self.WhereChanged(state => state.Error);
         }
-        public static IObservable<OperationState<TResult>> WhereProgressChanged<TResult>(this IObservable<OperationState<TResult>> self) where TResult : class
+        public static IObservable<IOperationState<TResult>> WhereProgressChanged<TResult>(this IObservable<IOperationState<TResult>> self) where TResult : class
         {
             return self.WhereChanged(state => state.Progress);
         }
 
-        public static IObservable<OperationState<TResult>> WithFallback<TResult>(
-            this IObservable<OperationState<TResult>> forOperation,
-            Func<IObservable<OperationState<TResult>>> fallback) where TResult : class
+        public static IObservable<IOperationState<TResult>> WithFallback<TResult>(
+            this IObservable<IOperationState<TResult>> forOperation,
+            Func<IObservable<IOperationState<TResult>>> fallback) where TResult : class
         {
-            IObservable<OperationState<TResult>> doFallback = forOperation
+            IObservable<IOperationState<TResult>> doFallback = forOperation
                 .WhereErrorChanged()
                 .Take(1)
                 .SelectMany(it => fallback());
@@ -86,19 +86,19 @@ namespace Futurice.DataAccess
                 .Merge(doFallback);
         }
 
-        public static IObserver<OperationState<TResult>> OnNextProgress<TResult>(this IObserver<OperationState<TResult>> self, double progress) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnNextProgress<TResult>(this IObserver<IOperationState<TResult>> self, double progress) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(progress: progress));
             return self;
         }
 
-        public static IObserver<OperationState<TResult>> OnNextResult<TResult>(this IObserver<OperationState<TResult>> self, TResult result, ModelIdentifier id, double progress = 100) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnNextResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress = 100) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress));
             return self;
         }
 
-        public static IObserver<OperationState<TResult>> OnNextError<TResult>(this IObserver<OperationState<TResult>> self, OperationError error, double progress = 100) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnNextError<TResult>(this IObserver<IOperationState<TResult>> self, OperationError error, double progress = 100) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(error: error, progress: progress));
             return self;

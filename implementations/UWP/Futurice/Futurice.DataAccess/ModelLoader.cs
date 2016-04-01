@@ -18,16 +18,16 @@ namespace Futurice.DataAccess
             _cache = defaultCache;
         }
 
-        protected abstract IObservable<OperationState<IBuffer>> LoadImplementation(ModelIdentifier id);
+        protected abstract IObservable<IOperationState<IBuffer>> LoadImplementation(ModelIdentifier id);
 
-        protected abstract IObservable<OperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data);
+        protected abstract IObservable<IOperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data);
 
         protected virtual Cache GetCache(ModelIdentifier id)
         {
             return _cache;
         }
 
-        private IObservable<OperationState<IBuffer>> LoadData(ModelIdentifier id, ModelSource source)
+        private IObservable<IOperationState<IBuffer>> LoadData(ModelIdentifier id, ModelSource source)
         {
             Cache cache = GetCache(id);
 
@@ -47,7 +47,7 @@ namespace Futurice.DataAccess
             }
         }
 
-        public IObservable<OperationState<object>> Load(ModelIdentifier id, ModelSource source)
+        public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source)
         {
             var loadStates = LoadData(id, source);
 
