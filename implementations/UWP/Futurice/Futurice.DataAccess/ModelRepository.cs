@@ -93,19 +93,31 @@ namespace Futurice.DataAccess
         Server
     }
 
+    public interface IMemoryCache
+    {
+        T Get<T>(ModelIdentifier id) where T : class;
+        void Set<T>(ModelIdentifier id, T model) where T : class;
+
+    }
+
     /// <summary>
     /// A class that manages ongoing operations and bindings to their updates, manages a memory cache for the models, and has the logic to load models according to different settings.
     /// </summary>
     public abstract class ModelRepository
     { 
-        protected abstract T GetFromMemory<T>(ModelIdentifier id) where T : class;
-
         private readonly ModelLoader _loader;
-        private ConcurrentDictionary<OperationKey, object> operations = new ConcurrentDictionary<OperationKey, object>();
+        private readonly IMemoryCache _cache;
+        private readonly ConcurrentDictionary<OperationKey, object> _ongoingOperations = new ConcurrentDictionary<OperationKey, object>();
 
-        public ModelRepository(ModelLoader loader)
+        public readonly Subject<IObservable<OperationStateBase>> _operationsObserver = new Subject<IObservable<OperationStateBase>>();
+        public readonly IObservable<IObservable<OperationStateBase>> Operations;
+
+        public ModelRepository(ModelLoader loader, IMemoryCache cache)
         {
             _loader = loader;
+            _cache = cache;
+
+            Operations = _operationsObserver;
         }
         
         /// <summary>
@@ -140,7 +152,7 @@ namespace Futurice.DataAccess
         }
 
         private IObservable<OperationState<T>> GetFromCache<T>(ModelIdentifier id, CancellationToken ct) where T : class {
-            var result = GetFromMemory<T>(id);
+            var result = _cache?.Get<T>(id);
 
             return result != null ?
                 Observable.Return(new OperationState<T>(result, 100, source: ModelSource.Memory)) :
@@ -175,7 +187,7 @@ namespace Futurice.DataAccess
         {
             var key = new OperationKey(id, source);
 
-            return operations.GetOrAdd(key, _ => {
+            return _ongoingOperations.GetOrAdd(key, _ => {
                 var newOperation = GetModel<T>(id, source, ct);
 
                 IDisposable connectDisposable = null;
@@ -184,7 +196,7 @@ namespace Futurice.DataAccess
                 Action onFinished = () =>
                 {
                     object obj;
-                    operations.TryRemove(key, out obj);
+                    _ongoingOperations.TryRemove(key, out obj);
 
                     subscriptionDisposable.Dispose();
 
@@ -196,6 +208,8 @@ namespace Futurice.DataAccess
 
                 subscriptionDisposable = newOperation.Subscribe(it => { }, unit => onFinished(), onFinished);
                 connectDisposable = newOperation.Connect();
+
+                _operationsObserver.OnNext(newOperation);
                 return newOperation;
             }) as IObservable<OperationState<T>>;
         }
@@ -203,6 +217,12 @@ namespace Futurice.DataAccess
         private IConnectableObservable<OperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
             var operation = _loader.Load(id, source);
+
+            if (_cache != null)
+            {
+                operation.WhereResultChanged().Subscribe(state => _cache.Set(state.ResultIdentifier, state.Result));
+            }
+
             return operation
                 .Select(modelsState => {
                     // Push to memory cache?

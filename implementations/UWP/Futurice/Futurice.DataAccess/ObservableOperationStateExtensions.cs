@@ -86,19 +86,19 @@ namespace Futurice.DataAccess
                 .Merge(doFallback);
         }
 
-        public static ISubject<OperationState<TResult>> OnNextProgress<TResult>(this ISubject<OperationState<TResult>> self, double progress) where TResult : class
+        public static IObserver<OperationState<TResult>> OnNextProgress<TResult>(this IObserver<OperationState<TResult>> self, double progress) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(progress: progress));
             return self;
         }
 
-        public static ISubject<OperationState<TResult>> OnNextResult<TResult>(this ISubject<OperationState<TResult>> self, TResult result, ModelIdentifier id, double progress = 100) where TResult : class
+        public static IObserver<OperationState<TResult>> OnNextResult<TResult>(this IObserver<OperationState<TResult>> self, TResult result, ModelIdentifier id, double progress = 100) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress));
             return self;
         }
 
-        public static ISubject<OperationState<TResult>> OnNextError<TResult>(this ISubject<OperationState<TResult>> self, OperationError error, double progress = 100) where TResult : class
+        public static IObserver<OperationState<TResult>> OnNextError<TResult>(this IObserver<OperationState<TResult>> self, OperationError error, double progress = 100) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(error: error, progress: progress));
             return self;

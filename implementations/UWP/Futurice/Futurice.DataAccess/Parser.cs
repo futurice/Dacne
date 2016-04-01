@@ -9,7 +9,7 @@ namespace Futurice.DataAccess
     {
         protected abstract object ParseImplementation(IBuffer data, ModelIdentifier id);
 
-        protected override void ParseImplementation(IBuffer data, ModelIdentifier id, ISubject<OperationState<object>> target)
+        protected override void ParseImplementation(IBuffer data, ModelIdentifier id, IObserver<OperationState<object>> target)
         {
             target.OnNext(new OperationState<object>(ParseImplementation(data, id), 100, null, false, ModelSource.Server));
         }
@@ -18,7 +18,7 @@ namespace Futurice.DataAccess
 
     public abstract class Parser
     {
-        protected abstract void ParseImplementation(IBuffer data, ModelIdentifier id, ISubject<OperationState<object>> target);
+        protected abstract void ParseImplementation(IBuffer data, ModelIdentifier id, IObserver<OperationState<object>> target);
 
         public IObservable<OperationState<object>> Parse(IBuffer data, ModelIdentifier id)
         {

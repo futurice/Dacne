@@ -61,7 +61,7 @@ namespace SampleApplication
     {
         private static readonly Regex ID_FROM_LINK = new Regex("[^/]*(?=#)");
 
-        protected override void ParseImplementation(IBuffer data, ModelIdentifier id, ISubject<OperationState<object>> target)
+        protected override void ParseImplementation(IBuffer data, ModelIdentifier id, IObserver<OperationState<object>> target)
         {
             var progress = 1.0;
             target.OnNextProgress(progress);
