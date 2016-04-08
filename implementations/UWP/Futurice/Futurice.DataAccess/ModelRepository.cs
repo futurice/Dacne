@@ -225,8 +225,6 @@ namespace Futurice.DataAccess
 
             return operation
                 .Select(modelsState => {
-                    // Push to memory cache?
-
                     T result = null;
                     ModelIdentifier resultId = null;
                     if (id.Equals(modelsState.ResultIdentifier))
