@@ -9,7 +9,7 @@ namespace Futurice.DataAccess
     {
         public IObservable<IOperationState<IBuffer>> Get(Uri uri)
         {
-            var subject = new Subject<IOperationState<IBuffer>>();
+            var subject = new ReplaySubject<IOperationState<IBuffer>>();
             var client = new HttpClient();
 
             client.GetBufferAsync(uri).AsTask().ContinueWith(result =>

@@ -23,7 +23,7 @@ namespace Futurice.DataAccess
         public IObservable<IOperationState<object>> Parse(IBuffer data, ModelIdentifier id)
         {
             var subject = new Subject<IOperationState<object>>();
-
+            
             Task.Run(() => {
                 try
                 {

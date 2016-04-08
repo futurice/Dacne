@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SampleApplication
 {
-    class NewsArticle
+    public class NewsArticle
     {
 
         public Uri Url { get; internal set; }

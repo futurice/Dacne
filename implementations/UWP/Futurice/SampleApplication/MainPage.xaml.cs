@@ -61,17 +61,19 @@ namespace SampleApplication
                 TextBlocksPanel.Children.Add(tb);
 
                 int count = 0;
-                App.Repository.Get<NewsArticle>(
-                    ModelLoader.GetBbcArticleId(35836853, "world", "asia"),
-                    i % 2 == 0 ? SourcePreference.Cache 
-                    : SourcePreference.Server, CancellationToken.None)
+                App.Repository.Get(
+                    //ModelLoader.GetBbcArticleId(35836853, "world", "asia"),
+                    ModelLoader.BbcArticlesId(),
+                    SourcePreference.Server,
+                    CancellationToken.None)
                         .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
                         .ObserveOn(UIDispatcherScheduler.Default)
                         .SubscribeStateChange(
-                            onResult: result => tb.Text = result.Title,
+                            onResult: result => tb.Text = result.Count().ToString(),
+                            onCompleted: state => tb.Text = state?.Result?.ElementAtOrDefault(i)?.Title ?? "Not found from " + state?.Error?.ToString(),
                             onProgress: progress => tb.Text = progress.ToString() + "%",
                             onError: error => tb.Text = error.ToString()
-                    );
+                        );
             }
 
             /*

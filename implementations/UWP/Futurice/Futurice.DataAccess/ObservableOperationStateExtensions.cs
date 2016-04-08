@@ -17,31 +17,44 @@ namespace Futurice.DataAccess
             return self;
         }
 
-        public static IDisposable SubscribeStateChange<TResult>(this IObservable<IOperationState<TResult>> self, Action<TResult> onResult = null, Action<double> onProgress = null, Action<OperationError> onError = null) where TResult : class
+        public static IDisposable SubscribeStateChange<TResult>(this IObservable<IOperationState<TResult>> self, Action<TResult> onResult = null, Action<double> onProgress = null, Action<OperationError> onError = null, Action<IOperationState<TResult>> onCompleted = null) where TResult : class
         {
             TResult result = null;
+            ModelSource source = ModelSource.Unknown;
+            ModelIdentifier id = null;
             double progress = 0;
             OperationError error = null;
+            bool isCancelled = false;
             return self
                 .Subscribe(state => {
-                    TryFire(onProgress, state.Progress, ref progress);
-                    TryFire(onError, state.Error, ref error);
-                    TryFire(onResult, state.Result, ref result);
-                }
+                    TryFire(onProgress, ref progress, state.Progress);
+                    TryFire(onError, ref error, state.Error);
+
+                    if (TryFire(onResult, ref result, state.Result))
+                    {
+                        id = state.ResultIdentifier;
+                        source = state.ResultSource;
+                    }
+
+                    isCancelled = state.IsCancelled;
+                },
+                () => onCompleted?.Invoke(new OperationState<TResult>(result, progress, error, isCancelled, source, id))
             );
         }
 
-        private static void TryFire<T>(Action<T> onChanged, T newValue, ref T oldValue)
+        private static bool TryFire<T>(Action<T> onChanged, ref T oldValue, T newValue)
         {
-            if (onChanged != null && !Object.Equals(newValue, oldValue)) {
-                oldValue = newValue;
-                onChanged(oldValue);
+            if (HasChanged(ref oldValue, newValue)) {
+                onChanged?.Invoke(newValue);
+                return true;
             }
+
+            return false;
         }
 
         private static bool HasChanged<T>(ref T oldValue, T newValue)
         {
-            if (!Object.Equals(newValue, oldValue)) {
+            if (!Object.Equals(newValue, default(T)) && !Object.Equals(newValue, oldValue)) {
                 oldValue = newValue;
                 return true;
             }
@@ -51,11 +64,10 @@ namespace Futurice.DataAccess
 
         public static IObservable<IOperationState<TResult>> WhereChanged<TResult, TProperty>(this IObservable<IOperationState<TResult>> self, Func<IOperationState<TResult>, TProperty> selector) where TResult : class
         {
-            TProperty def = default(TProperty);
-            TProperty oldValue = def;
+            TProperty oldValue = default(TProperty);
             return self.Where(state => {
                 var newValue = selector(state);
-                return !Object.Equals(newValue, def) && HasChanged(ref oldValue, newValue);
+                return HasChanged(ref oldValue, newValue);
             });
         }
 
@@ -92,13 +104,13 @@ namespace Futurice.DataAccess
             return self;
         }
 
-        public static IObserver<IOperationState<TResult>> OnNextResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress = 100) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnNextResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress));
             return self;
         }
 
-        public static IObserver<IOperationState<TResult>> OnNextError<TResult>(this IObserver<IOperationState<TResult>> self, OperationError error, double progress = 100) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnNextError<TResult>(this IObserver<IOperationState<TResult>> self, OperationError error, double progress) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(error: error, progress: progress));
             return self;

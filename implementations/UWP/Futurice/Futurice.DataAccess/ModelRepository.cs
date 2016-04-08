@@ -127,7 +127,7 @@ namespace Futurice.DataAccess
         /// <param name="id">Identifier for which to get the model object.</param>
         /// <param name="source">Determines the sources from which the model is loaded from, or if an request should be started at all.</param>
         /// <returns>Stream of updates from which the progress and result of the operation can be accessed from.</returns>
-        public IObservable<IOperationState<T>> Get<T>(ModelIdentifier id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default(CancellationToken)) where T : class
+        public IObservable<IOperationState<T>> Get<T>(ModelIdentifier<T> id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default(CancellationToken)) where T : class
         {
 
             switch (source) {
@@ -199,24 +199,21 @@ namespace Futurice.DataAccess
                     _ongoingOperations.TryRemove(key, out obj);
 
                     subscriptionDisposable.Dispose();
-
-                    if (connectDisposable != null)
-                    {
-                        connectDisposable.Dispose();
-                    }
+                    connectDisposable?.Dispose();
                 };
 
-                subscriptionDisposable = newOperation.Subscribe(it => { }, unit => onFinished(), onFinished);
-                connectDisposable = newOperation.Connect();
-
+                //connectDisposable = newOperation.Connect();
+                subscriptionDisposable = newOperation.Subscribe(__ => { }, __ => onFinished(), onFinished);
+                
                 _operationsObserver.OnNext(newOperation);
                 return newOperation;
             });
         }
 
-        private IConnectableObservable<IOperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
+        private IObservable<IOperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
-            var operation = _loader.Load(id, source);
+            var operation = _loader.Load(id, source);//.StartWith(new OperationState<T>()).Replay();
+            //operation.Connect();
 
             if (_cache != null)
             {
@@ -224,7 +221,10 @@ namespace Futurice.DataAccess
             }
 
             return operation
-                .Select(modelsState => {
+                // TODO: Should we start with an empty operationstate ?
+                
+                .Select(modelsState =>
+                {
                     T result = null;
                     ModelIdentifier resultId = null;
                     if (id.Equals(modelsState.ResultIdentifier))
@@ -234,8 +234,8 @@ namespace Futurice.DataAccess
                     }
                     return new OperationState<T>(result, modelsState.Progress, modelsState.Error, modelsState.IsCancelled, modelsState.ResultSource, resultId);
                 })
-                .TakeWhile(s => s.Progress <= 100)
-                .Replay();
+                .TakeWhile(s => s.Progress <= 100);
+
         }
     }
 }

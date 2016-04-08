@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
@@ -35,8 +36,7 @@ namespace Futurice.DataAccess
             {
                 case ModelSource.Server:
                     var fromServer = LoadImplementation(id);
-                    fromServer.OnResult(it => cache?.Save(id, it)).Subscribe();
-                    return fromServer;
+                    return fromServer.OnResult(it => cache?.Save(id, it));
 
                 case ModelSource.Disk:
                     return (cache == null) ?
@@ -47,29 +47,33 @@ namespace Futurice.DataAccess
             }
         }
 
-        public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source)
+        public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source, double loadOperationProgressShare = 80)
         {
             var loadStates = LoadData(id, source);
 
             object latestResult = null;
             ModelIdentifier latestId = null;
-            return Observable.Merge(
+            var subject = new ReplaySubject<IOperationState<object>>();
+            Observable.Merge(
                 loadStates
                     .WhereProgressChanged()
-                    .Select(loadState => new OperationState<object>(null, loadState.Progress, loadState.Error, loadState.IsCancelled)),
+                    .Select(loadState => new OperationState<object>(null, loadState.Progress * loadOperationProgressShare / 100, loadState.Error, loadState.IsCancelled)),
 
                 loadStates
                     .WhereResultChanged()
                     .SelectMany(state => ParseImplementation(id, state.Result))
-            )
-            .Do(s => {
-                if (s.Result != null)
-                {
-                    latestResult = s.Result;
-                    latestId = s.ResultIdentifier;
-                }
-            })
-            .Select(s => new OperationState<object>(latestResult, id.Equals(latestId) ? 100 : s.Progress, s.Error, s.IsCancelled, s.ResultSource, latestId));
+                    .Do(s =>
+                    {
+                        if (s.Result != null)
+                        {
+                            latestResult = s.Result;
+                            latestId = s.ResultIdentifier;
+                        }
+                    })
+                    .Select(s => new OperationState<object>(latestResult, loadOperationProgressShare + (s.Progress * (100 - loadOperationProgressShare) / 100), s.Error, s.IsCancelled, s.ResultSource, latestId))
+            ).Subscribe(subject);
+            
+            return subject;
         }
     }
 

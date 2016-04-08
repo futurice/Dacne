@@ -51,9 +51,14 @@ namespace SampleApplication
             return new BbcParser().Parse(data, id);
         }
         
-        public static ModelIdentifier GetBbcArticleId(int item, params string[] sections)
+        public static ModelIdentifier<NewsArticle> GetBbcArticleId(int item, params string[] sections)
         {
             return BbcParser.CreateItemId(item, sections);
+        }
+
+        public static ModelIdentifier<IEnumerable<NewsArticle>> BbcArticlesId()
+        {
+            return BbcParser.AllArticlesId;
         }
     }
 
@@ -69,39 +74,56 @@ namespace SampleApplication
             var doc = XDocument.Load(data.AsStream());
 
             progress = 20;
-            target.OnNextProgress(progress);
+
+            // TODO: Try to get existing list from repository
+            var list = new List<NewsArticle>();
+            target.OnNextResult(list, AllArticlesId, progress);
 
             var items = doc.Descendants("item").ToList();
-            var itemProgress = (100.0 - progress) / items.Count();  
+            var itemProgress = (100.0 - progress) / items.Count();
             foreach (var item in items)
             {
                 var link = item.Element("link").Value;
-                var article = new NewsArticle   
+                var article = new NewsArticle
                 {
                     Url = new Uri(link),
                     Title = item.Element("title").Value
                 };
 
                 var idString = ID_FROM_LINK.Match(link).Value;
-                var thisId = new ModelIdentifier(idString);
+                var thisId = new BbcArticleIdentifier(idString);
 
                 progress = thisId.Equals(id) ? 100 : progress + itemProgress;
 
-
                 target.OnNextResult(article, thisId, progress);
+                list.Add(article);
             }
-            
+
             if (progress < 100)
             {
                 target.OnNextProgress(100);
             }
+
+            //target.OnCompleted();
         }
 
-        public static ModelIdentifier CreateItemId(int item, params string[] sections)
+        public static BbcArticleIdentifier CreateItemId(int item, params string[] sections)
         {
             var str = String.Join("-", sections.Select(v => v.ToLower())) + "-" + item.ToString();
-            return new ModelIdentifier(str);
+            return new BbcArticleIdentifier(str);
         }
+
+        public static readonly AllBbcArticlesIdentifier AllArticlesId = new AllBbcArticlesIdentifier();
+    }
+
+    public class BbcArticleIdentifier : SimpleModelIdentifier<NewsArticle>
+    {
+        public BbcArticleIdentifier(string id) : base(id) { }
+    }
+
+    public class AllBbcArticlesIdentifier : ModelIdentifier<IEnumerable<NewsArticle>>
+    {
+
     }
 
     public class BbcDataLoader
