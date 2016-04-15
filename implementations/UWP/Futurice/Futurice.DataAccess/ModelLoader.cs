@@ -12,36 +12,44 @@ namespace Futurice.DataAccess
 {
     public abstract class ModelLoader
     {
-        private readonly Cache _cache;
+        private readonly ICache _cache;
 
-        public ModelLoader(Cache defaultCache = null)
+        public ModelLoader(ICache defaultCache = null)
         {
             _cache = defaultCache;
         }
 
-        protected abstract IObservable<IOperationState<IBuffer>> LoadImplementation(ModelIdentifier id);
+        protected abstract void LoadImplementation(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target);
 
-        protected abstract IObservable<IOperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data);
+        protected abstract void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target);
 
-        protected virtual Cache GetCache(ModelIdentifier id)
+        protected virtual ICache GetCache(ModelIdentifier id)
         {
             return _cache;
         }
 
-        private IObservable<IOperationState<IBuffer>> LoadData(ModelIdentifier id, ModelSource source)
+        private void LoadData(ModelIdentifier id, ModelSource source, Subject<IOperationState<IBuffer>> target)
         {
-            Cache cache = GetCache(id);
+            ICache cache = GetCache(id);
 
             switch (source)
             {
                 case ModelSource.Server:
-                    var fromServer = LoadImplementation(id);
-                    return fromServer.OnResult(it => cache?.Save(id, it));
+                    target.OnResult(it => cache?.Save(id, it));
+                    LoadImplementation(id, target);
+                    break;
 
                 case ModelSource.Disk:
-                    return (cache == null) ?
-                        Observable.Return(new OperationState<IBuffer>(null, 0, new OperationError(message: "Disk cache not set!"), false, ModelSource.Disk)) :
-                        cache.Load(id);
+                    if (cache == null)
+                    {
+                        target.OnNextError(new OperationError(message: "Disk cache not set!"), 0);
+                    }
+                    else
+                    {
+                        cache.Load(id, target);
+                    }
+                    break;
+
                 default:
                     throw new Exception("Unknown source: " + source);
             }
@@ -49,19 +57,18 @@ namespace Futurice.DataAccess
 
         public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source, double loadOperationProgressShare = 80)
         {
-            var loadStates = LoadData(id, source);
+            var loadOperationStates = new Subject<IOperationState<IBuffer>>();
+            var parseOperationStates = new Subject<IOperationState<object>>();
 
             object latestResult = null;
             ModelIdentifier latestId = null;
-            var subject = new ReplaySubject<IOperationState<object>>();
+            var combinedReplayStates = new ReplaySubject<IOperationState<object>>();
             Observable.Merge(
-                loadStates
+                loadOperationStates
                     .WhereProgressChanged()
                     .Select(loadState => new OperationState<object>(null, loadState.Progress * loadOperationProgressShare / 100, loadState.Error, loadState.IsCancelled)),
 
-                loadStates
-                    .WhereResultChanged()
-                    .SelectMany(state => ParseImplementation(id, state.Result))
+                parseOperationStates
                     .Do(s =>
                     {
                         if (s.Result != null)
@@ -71,9 +78,13 @@ namespace Futurice.DataAccess
                         }
                     })
                     .Select(s => new OperationState<object>(latestResult, loadOperationProgressShare + (s.Progress * (100 - loadOperationProgressShare) / 100), s.Error, s.IsCancelled, s.ResultSource, latestId))
-            ).Subscribe(subject);
-            
-            return subject;
+            ).Subscribe(combinedReplayStates);
+
+
+            loadOperationStates.SubscribeStateChange(onResult: data => ParseImplementation(id, data, parseOperationStates));
+            LoadData(id, source, loadOperationStates);
+
+            return combinedReplayStates;
         }
     }
 

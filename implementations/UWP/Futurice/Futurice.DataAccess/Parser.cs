@@ -7,36 +7,33 @@ namespace Futurice.DataAccess
 {
     public abstract class SimpleParser : Parser
     {
-        protected abstract object ParseImplementation(IBuffer data, ModelIdentifier id);
+        protected abstract object ParseImplementation(ModelIdentifier id, IBuffer data);
 
-        protected override void ParseImplementation(IBuffer data, ModelIdentifier id, IObserver<IOperationState<object>> target)
+        protected override void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target)
         {
-            target.OnNext(new OperationState<object>(ParseImplementation(data, id), 100, null, false, ModelSource.Server));
+            target.OnNextResult(ParseImplementation(id, data), id, 100, ModelSource.Server);
+            target.OnCompleted();
         }
 
     }
 
     public abstract class Parser
     {
-        protected abstract void ParseImplementation(IBuffer data, ModelIdentifier id, IObserver<IOperationState<object>> target);
+        protected abstract void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target);
 
-        public IObservable<IOperationState<object>> Parse(IBuffer data, ModelIdentifier id)
+        public void Parse(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target)
         {
-            var subject = new Subject<IOperationState<object>>();
-            
             Task.Run(() => {
                 try
                 {
-                    ParseImplementation(data, id, subject);
+                    ParseImplementation(id, data, target);
                 }
                 catch (Exception e)
                 {
-                    subject.OnNext(new OperationState<object>(null, 100, new OperationError(e), false, ModelSource.Server));
+                    target.OnNextError(new OperationError(e), 100, ModelSource.Server);
+                    target.OnCompleted();
                 }
-                subject.OnCompleted();
             });
-
-            return subject;
         }
 
     }

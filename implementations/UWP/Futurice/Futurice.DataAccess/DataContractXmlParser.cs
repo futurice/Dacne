@@ -18,7 +18,7 @@ namespace Futurice.DataAccess
             this.type = type;
         }
 
-        protected override object ParseImplementation(IBuffer data, ModelIdentifier id)
+        protected override object ParseImplementation(ModelIdentifier id, IBuffer data)
         {
             using (var reader = XmlReader.Create(data.AsStream(), new XmlReaderSettings { IgnoreProcessingInstructions = true, DtdProcessing = DtdProcessing.Ignore }))
             {

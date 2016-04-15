@@ -3,8 +3,8 @@ using Windows.Storage.Streams;
 
 namespace Futurice.DataAccess
 {
-    public interface DataLoader
+    public interface IDataLoader
     {
-        IObservable<IOperationState<IBuffer>> Load(ModelIdentifier id);
+        void Load(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reactive.Subjects;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
@@ -7,18 +8,17 @@ namespace Futurice.DataAccess
 {
     public class NetworkRequestHander
     {
-        public IObservable<IOperationState<IBuffer>> Get(Uri uri)
+        public void Get(Uri uri, IObserver<IOperationState<IBuffer>> target)
         {
-            var subject = new ReplaySubject<IOperationState<IBuffer>>();
             var client = new HttpClient();
 
+            Debug.WriteLine("Request started: " + uri.ToString());
             client.GetBufferAsync(uri).AsTask().ContinueWith(result =>
             {
-                subject.OnNext(new OperationState<IBuffer>(result.Result, 100, null, false, ModelSource.Server));
-                subject.OnCompleted();
+                target.OnNextResult(result.Result, null, 100, ModelSource.Server);
+                target.OnCompleted();
+                Debug.WriteLine("Request completed: " + uri.ToString());
             });
-
-            return subject;
         }
     }
 }

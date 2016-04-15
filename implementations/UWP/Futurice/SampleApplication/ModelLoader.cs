@@ -16,47 +16,26 @@ using System.Diagnostics;
 
 namespace SampleApplication
 {
-    public class TestCache : Cache
-    {
-        private ConcurrentDictionary<ModelIdentifier, IBuffer> _cache =
-            new ConcurrentDictionary<ModelIdentifier, IBuffer>();
-
-        public IObservable<IOperationState<IBuffer>> Load(ModelIdentifier id)
-        {
-            IBuffer value;
-
-            return Observable.Return(
-                _cache.TryGetValue(id, out value) ?
-                new OperationState<IBuffer>(value, 100, null, false, ModelSource.Disk) :
-                new OperationState<IBuffer>(null, 0, new OperationError(), false, ModelSource.Disk));
-        }
-
-        public void Save(ModelIdentifier id, IBuffer data)
-        {
-            _cache.AddOrUpdate(id, data, (_, __) => data);
-        }
-    }
-
     public class ModelLoader : Futurice.DataAccess.ModelLoader
     {
-        protected override IObservable<IOperationState<IBuffer>> LoadImplementation(ModelIdentifier id)
+        protected override void LoadImplementation(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target)
         {
             // Check that this model is supposed to be loaded from the bbc
-            return new NetworkRequestHander().Get(new Uri("http://feeds.bbci.co.uk/news/rss.xml"));
+            new NetworkRequestHander().Get(new Uri("http://feeds.bbci.co.uk/news/rss.xml"), target);
         }
 
-        protected override IObservable<IOperationState<object>> ParseImplementation(ModelIdentifier id, IBuffer data)
+        protected override void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target)
         {
             // Use the parser for this model
-            return new BbcParser().Parse(data, id);
+            new BbcParser().Parse(id, data, target);
         }
         
-        public static ModelIdentifier<NewsArticle> GetBbcArticleId(int item, params string[] sections)
+        public static ModelIdentifier<NewsArticle> GetBbcArticleIdentifier(int item, params string[] sections)
         {
             return BbcParser.CreateItemId(item, sections);
         }
 
-        public static ModelIdentifier<IEnumerable<NewsArticle>> BbcArticlesId()
+        public static ModelIdentifier<IEnumerable<NewsArticle>> GetBbcArticlesIdentifier()
         {
             return BbcParser.AllArticlesId;
         }
@@ -66,7 +45,7 @@ namespace SampleApplication
     {
         private static readonly Regex ID_FROM_LINK = new Regex("[^/]*(?=#)");
 
-        protected override void ParseImplementation(IBuffer data, ModelIdentifier id, IObserver<IOperationState<object>> target)
+        protected override void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target)
         {
             var progress = 1.0;
             target.OnNextProgress(progress);
@@ -104,7 +83,7 @@ namespace SampleApplication
                 target.OnNextProgress(100);
             }
 
-            //target.OnCompleted();
+            target.OnCompleted();
         }
 
         public static BbcArticleIdentifier CreateItemId(int item, params string[] sections)

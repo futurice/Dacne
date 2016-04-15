@@ -63,7 +63,7 @@ namespace SampleApplication
                 int count = 0;
                 App.Repository.Get(
                     //ModelLoader.GetBbcArticleId(35836853, "world", "asia"),
-                    ModelLoader.BbcArticlesId(),
+                    ModelLoader.GetBbcArticlesIdentifier(),
                     SourcePreference.Server,
                     CancellationToken.None)
                         .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))

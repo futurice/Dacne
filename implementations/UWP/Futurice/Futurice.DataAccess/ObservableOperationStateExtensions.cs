@@ -98,21 +98,21 @@ namespace Futurice.DataAccess
                 .Merge(doFallback);
         }
 
-        public static IObserver<IOperationState<TResult>> OnNextProgress<TResult>(this IObserver<IOperationState<TResult>> self, double progress) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnNextProgress<TResult>(this IObserver<IOperationState<TResult>> self, double progress, ModelSource source = ModelSource.Unknown) where TResult : class
         {
-            self.OnNext(new OperationState<TResult>(progress: progress));
+            self.OnNext(new OperationState<TResult>(progress: progress, source: source));
             return self;
         }
 
-        public static IObserver<IOperationState<TResult>> OnNextResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnNextResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress, ModelSource source = ModelSource.Unknown) where TResult : class
         {
-            self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress));
+            self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress, source: source));
             return self;
         }
 
-        public static IObserver<IOperationState<TResult>> OnNextError<TResult>(this IObserver<IOperationState<TResult>> self, OperationError error, double progress) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnNextError<TResult>(this IObserver<IOperationState<TResult>> self, OperationError error, double progress, ModelSource source = ModelSource.Unknown) where TResult : class
         {
-            self.OnNext(new OperationState<TResult>(error: error, progress: progress));
+            self.OnNext(new OperationState<TResult>(error: error, progress: progress, source: source));
             return self;
         }
     }

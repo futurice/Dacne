@@ -9,7 +9,7 @@ namespace SampleApplication
 {
     public class ModelRepository : Futurice.DataAccess.ModelRepository
     {
-        public ModelRepository(ModelLoader loader) : base(loader) { }
+        public ModelRepository(ModelLoader loader) : base(loader, new SimpleMemoryCache()) { }
 
     }
 

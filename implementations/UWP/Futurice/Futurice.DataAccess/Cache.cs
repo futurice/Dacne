@@ -2,7 +2,7 @@
 
 namespace Futurice.DataAccess
 {
-    public interface Cache : DataLoader
+    public interface ICache : IDataLoader
     {
         void Save(ModelIdentifier id, IBuffer data);
     }
