@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -42,7 +43,8 @@ namespace Futurice.DataAccess
                 case ModelSource.Disk:
                     if (cache == null)
                     {
-                        target.OnNextError(new OperationError(message: "Disk cache not set!"), 0);
+                        target.OnNextError(new OperationError(message: "Disk cache not set!"), 0, ModelSource.Disk);
+                        target.OnCompleted();
                     }
                     else
                     {
@@ -60,28 +62,45 @@ namespace Futurice.DataAccess
             var loadOperationStates = new Subject<IOperationState<IBuffer>>();
             var parseOperationStates = new Subject<IOperationState<object>>();
 
-            object latestResult = null;
+            object latestModel = null;
             ModelIdentifier latestId = null;
+            OperationError latestError = null;
+            double loadProgress = 0;
+            double parserProgress = 0;
+            
             var combinedReplayStates = new ReplaySubject<IOperationState<object>>();
             Observable.Merge(
-                loadOperationStates
-                    .WhereProgressChanged()
-                    .Select(loadState => new OperationState<object>(null, loadState.Progress * loadOperationProgressShare / 100, loadState.Error, loadState.IsCancelled)),
+                    loadOperationStates.Select(_ => Unit.Default),
 
-                parseOperationStates
-                    .Do(s =>
-                    {
-                        if (s.Result != null)
+                    parseOperationStates
+                        .Do(s =>
                         {
-                            latestResult = s.Result;
-                            latestId = s.ResultIdentifier;
-                        }
-                    })
-                    .Select(s => new OperationState<object>(latestResult, loadOperationProgressShare + (s.Progress * (100 - loadOperationProgressShare) / 100), s.Error, s.IsCancelled, s.ResultSource, latestId))
-            ).Subscribe(combinedReplayStates);
+                            latestError = s.Error ?? latestError;
+                            parserProgress = s.Progress;
+                            if (s.Result != null)
+                            {
+                                latestModel = s.Result;
+                                latestId = s.ResultIdentifier;
+                            }
+                        })
+                        .Select(_ => Unit.Default)
+                )
+                .Select(s => new OperationState<object>(
+                                latestModel,
+                                parserProgress == 100 ? 100 : loadProgress * loadOperationProgressShare + (parserProgress * (100 - loadOperationProgressShare) / 100), 
+                                latestError,
+                                false, // TODO: Cancelled?
+                                source,
+                                latestId)
+                        )
+                .Subscribe(combinedReplayStates);
+            
+            loadOperationStates.SubscribeStateChange(
+                onProgress: v => loadProgress = v,
+                onResult: data => ParseImplementation(id, data, parseOperationStates),
+                onError: e => latestError = e ?? latestError
+            );
 
-
-            loadOperationStates.SubscribeStateChange(onResult: data => ParseImplementation(id, data, parseOperationStates));
             LoadData(id, source, loadOperationStates);
 
             return combinedReplayStates;

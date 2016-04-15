@@ -155,7 +155,7 @@ namespace Futurice.DataAccess
             var result = _cache?.Get<T>(id);
 
             return result != null ?
-                Observable.Return(new OperationState<T>(result, 100, source: ModelSource.Memory)) :
+                Observable.Return(new OperationState<T>(result, 100, id: id, source: ModelSource.Memory)) :
                 Get<T>(id, ModelSource.Disk, ct);
         }
 

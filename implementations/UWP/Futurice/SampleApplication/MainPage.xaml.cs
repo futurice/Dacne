@@ -55,7 +55,7 @@ namespace SampleApplication
         {
             // Option A
             for (int i = 0; i < 100; i++) {
-                await Task.Delay(TimeSpan.FromMilliseconds(500));
+                //await Task.Delay(TimeSpan.FromMilliseconds(500));
 
                 var tb = new TextBlock();
                 TextBlocksPanel.Children.Add(tb);
@@ -64,13 +64,13 @@ namespace SampleApplication
                 App.Repository.Get(
                     //ModelLoader.GetBbcArticleId(35836853, "world", "asia"),
                     ModelLoader.GetBbcArticlesIdentifier(),
-                    SourcePreference.Server,
+                    i == 0 ? SourcePreference.Server : SourcePreference.Cache,
                     CancellationToken.None)
-                        .SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
+                        //.SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
                         .ObserveOn(UIDispatcherScheduler.Default)
                         .SubscribeStateChange(
                             onResult: result => tb.Text = result.Count().ToString(),
-                            onCompleted: state => tb.Text = state?.Result?.ElementAtOrDefault(i)?.Title ?? "Not found from " + state?.Error?.ToString(),
+                            onCompleted: state => tb.Text = state?.Result?.ElementAtOrDefault(i)?.Title ?? "Not found from " + state?.ResultSource.ToString(),
                             onProgress: progress => tb.Text = progress.ToString() + "%",
                             onError: error => tb.Text = error.ToString()
                         );
