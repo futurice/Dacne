@@ -13,8 +13,14 @@ namespace Futurice.DataAccess
     {
         public static IObservable<IOperationState<TResult>> OnResult<TResult>(this IObservable<IOperationState<TResult>> self, Action<TResult> onResult) where TResult : class
         {
-            self.Where(state => state.Result != null).Do(state => onResult(state.Result));
-            return self;
+            TResult oldValue = default(TResult);
+            return self.Do(state =>
+            {
+                if (HasChanged(ref oldValue, state.Result))
+                {
+                    onResult(state.Result);
+                }
+            });
         }
 
         public static IDisposable SubscribeStateChange<TResult>(this IObservable<IOperationState<TResult>> self, Action<TResult> onResult = null, Action<double> onProgress = null, Action<OperationError> onError = null, Action<IOperationState<TResult>> onCompleted = null) where TResult : class
