@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -57,50 +58,50 @@ namespace Futurice.DataAccess
             }
         }
 
-        public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source, double loadOperationProgressShare = 80)
+        public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source, double loadOperationProgressShare = 0.8)
         {
             var loadOperationStates = new Subject<IOperationState<IBuffer>>();
             var parseOperationStates = new Subject<IOperationState<object>>();
-
-            object latestModel = null;
-            ModelIdentifier latestId = null;
-            OperationError latestError = null;
-            double loadProgress = 0;
-            double parserProgress = 0;
             
             var combinedReplayStates = new ReplaySubject<IOperationState<object>>();
-            Observable.Merge(
-                    loadOperationStates.Select(_ => Unit.Default),
+            Observable.CombineLatest(
+                    loadOperationStates
+                        .OnResult(buffer => ParseImplementation(id, buffer, parseOperationStates))
+                        .StartWith(null as IOperationState<IBuffer>),
 
                     parseOperationStates
-                        .Do(s =>
-                        {
-                            latestError = s.Error ?? latestError;
-                            parserProgress = s.Progress;
-                            if (s.Result != null)
-                            {
-                                latestModel = s.Result;
-                                latestId = s.ResultIdentifier;
-                            }
-                        })
-                        .Select(_ => Unit.Default)
+                        .StartWith(null as IOperationState<object>),
+                   
+                    (load, parse) => Tuple.Create(load, parse)
                 )
-                .Select(s => new OperationState<object>(
-                                latestModel,
-                                parserProgress == 100 ? 100 : loadProgress * loadOperationProgressShare + (parserProgress * (100 - loadOperationProgressShare) / 100), 
-                                latestError,
-                                false, // TODO: Cancelled?
-                                source,
-                                latestId)
-                        )
+                .Buffer(2,1)
+                .Where(pairs => pairs.Count == 2) // Last buffer
+                .Select(pairs =>
+                {
+                    var olds = pairs[0];
+                    var oldLoad = olds?.Item1;
+                    var oldParse = olds?.Item2;
+
+                    var news = pairs[1];
+                    var newLoad = news.Item1;
+                    var newParse = news.Item2;
+
+                    var loadError = newLoad.Error ?? oldLoad?.Error;
+                    var parseError = newParse?.Error ?? oldParse?.Error;
+                    var latestError = oldLoad != newLoad ? loadError ?? parseError : parseError ?? loadError;
+
+                    return new OperationState<object>(
+                        newParse?.Result,
+                        newParse?.Progress == 100
+                            ? 100
+                            : newLoad.Progress * loadOperationProgressShare + ((newParse?.Progress ?? 0) * (1.0 - loadOperationProgressShare)),
+                        latestError,
+                        false, // TODO: Cancelled?
+                        source,
+                        newParse?.ResultIdentifier);
+                })
                 .Subscribe(combinedReplayStates);
             
-            loadOperationStates.SubscribeStateChange(
-                onProgress: v => loadProgress = v,
-                onResult: data => ParseImplementation(id, data, parseOperationStates),
-                onError: e => latestError = e ?? latestError
-            );
-
             LoadData(id, source, loadOperationStates);
 
             return combinedReplayStates;
