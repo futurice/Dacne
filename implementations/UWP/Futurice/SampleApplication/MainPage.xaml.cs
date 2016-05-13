@@ -53,6 +53,9 @@ namespace SampleApplication
 
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
+            var cts = new CancellationTokenSource();
+            cts.Cancel();
+            
             // Option A
             for (int i = 0; i < 100; i++) {
                 //await Task.Delay(TimeSpan.FromMilliseconds(10 * i));
@@ -64,15 +67,17 @@ namespace SampleApplication
                 App.Repository.Get(
                     //ModelLoader.GetBbcArticleId(35836853, "world", "asia"),
                     ModelLoader.GetBbcArticlesIdentifier(),
-                    i == 0 ? SourcePreference.Server : SourcePreference.CacheWithServerFallback,
-                    CancellationToken.None)
+                    SourcePreference.Server,
+                    i % 2 == 0 ? cts.Token : CancellationToken.None)
                         //.SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
                         .ObserveOn(UIDispatcherScheduler.Default)
                         .SubscribeStateChange(
-                            onResult: result => tb.Text = result.Count().ToString(),
-                            onCompleted: state => tb.Text = state?.Result?.ElementAtOrDefault(j)?.Title + " / " + state?.ResultSource.ToString(),
                             onProgress: progress => tb.Text = progress.ToString() + "%",
-                            onError: error => tb.Text = error.ToString()
+                            onResult: result => tb.Text = result.Count().ToString(),
+                            onError: error => tb.Text = error.ToString(),
+                            onCompleted: state => tb.Text = state?.IsCancelled ?? true
+                                                                ? ":("
+                                                                : state?.Result?.ElementAtOrDefault(j)?.Title + " / " + state?.ResultSource.ToString()
                         );
             }
 

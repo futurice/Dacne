@@ -13,18 +13,19 @@ using System.Collections.Concurrent;
 using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Threading;
 
 namespace SampleApplication
 {
     public class ModelLoader : Futurice.DataAccess.ModelLoader
     {
-        protected override void LoadImplementation(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target)
+        protected override void LoadImplementation(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target, CancellationToken ct)
         {
             // Check that this model is supposed to be loaded from the bbc
             new NetworkRequestHander().Get(new Uri("http://feeds.bbci.co.uk/news/rss.xml"), target);
         }
 
-        protected override void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target)
+        protected override void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target, CancellationToken ct)
         {
             // Use the parser for this model
             new BbcParser().Parse(id, data, target);

@@ -24,6 +24,61 @@ namespace Futurice.DataAccess
         }
     }
 
+    class OperationEntry
+    {
+        private readonly List<CancellationToken> _cancellationTokens = new List<CancellationToken>();
+        private readonly Action _onCancelled;
+        private bool IsCancelled => _cancellationTokens.Count == 0;
+
+        public object Operation { get; private set; }
+
+        public OperationEntry(object operation, CancellationToken initialToken, Action onCancelled)
+        {
+            Operation = operation;
+            _onCancelled = onCancelled;
+            RegisterCancellation(initialToken);
+        }
+
+        private object _lock = new Object();
+
+        public bool TryRegisterCancellation(CancellationToken ct)
+        {
+            lock(_lock)
+            {
+                if (IsCancelled)
+                {
+                    return false;
+                }
+
+                RegisterCancellation(ct);
+            }
+
+            return true;
+        }
+
+        private void RegisterCancellation(CancellationToken ct)
+        {
+            _cancellationTokens.Add(ct);
+            ct.Register(() =>
+            {
+                lock (_lock)
+                {
+                    _cancellationTokens.Remove(ct);
+                    CheckIsCancelled();
+                }
+            });
+        }
+
+        private void CheckIsCancelled()
+        {
+            if (IsCancelled)
+            {
+                _onCancelled();
+            }
+        }
+
+    }
+
     class OperationKey
     {
         public readonly ModelIdentifier Identifier;
@@ -107,7 +162,7 @@ namespace Futurice.DataAccess
     { 
         private readonly ModelLoader _loader;
         private readonly IMemoryCache _cache;
-        private readonly ConcurrentDictionary<OperationKey, object> _ongoingOperations = new ConcurrentDictionary<OperationKey, object>();
+        private readonly ConcurrentDictionary<OperationKey, OperationEntry> _ongoingOperations = new ConcurrentDictionary<OperationKey, OperationEntry>();
 
         public readonly Subject<IObservable<IOperationStateBase>> _operationsObserver = new Subject<IObservable<IOperationStateBase>>();
         public readonly IObservable<IObservable<IOperationStateBase>> Operations;
@@ -186,33 +241,57 @@ namespace Futurice.DataAccess
         private IObservable<IOperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
             var key = new OperationKey(id, source);
+            
+            var entry = _ongoingOperations.AddOrUpdate(key, 
+                _ => CreateOperationEntry<T>(id, source, ct, key), 
+                (_, oldEntry) => oldEntry.TryRegisterCancellation(ct) 
+                                    ? oldEntry 
+                                    : CreateOperationEntry<T>(id, source, ct, key)
+            );
+            
+            var operation = (IObservable<IOperationState<T>>)entry.Operation;
 
-            return (IObservable<IOperationState<T>>)_ongoingOperations.GetOrAdd(key, _ => {
-                var newOperation = GetModel<T>(id, source, ct);
+            return operation
+                .TakeWhile(_ => !ct.IsCancellationRequested)
+                .Concat(Observable.Defer(() => ct.IsCancellationRequested 
+                                                ? Observable.Return(new OperationState<T>(isCancelled: true)) 
+                                                : Observable.Empty<OperationState<T>>()));
+        }
 
-                IDisposable connectDisposable = null;
-                IDisposable subscriptionDisposable = null;
+        private OperationEntry CreateOperationEntry<T>(ModelIdentifier id, ModelSource source, CancellationToken ct, OperationKey key) where T : class
+        {
+            var combinedCts = new CancellationTokenSource();
+            var newOperation = GetModel<T>(id, source, combinedCts.Token);
 
-                Action onFinished = () =>
-                {
-                    object obj;
-                    _ongoingOperations.TryRemove(key, out obj);
+            IDisposable connectDisposable = null;
+            IDisposable subscriptionDisposable = null;
 
-                    subscriptionDisposable.Dispose();
-                    connectDisposable?.Dispose();
-                };
+            Action onFinished = () =>
+            {
+                OperationEntry obj;
+                _ongoingOperations.TryRemove(key, out obj);
 
-                //connectDisposable = newOperation.Connect();
-                subscriptionDisposable = newOperation.Subscribe(__ => { }, __ => onFinished(), onFinished);
-                
-                _operationsObserver.OnNext(newOperation);
-                return newOperation;
-            });
+                subscriptionDisposable.Dispose();
+                connectDisposable?.Dispose();
+            };
+
+            subscriptionDisposable = newOperation.Subscribe(__ => { }, __ => onFinished(), onFinished);
+
+            _operationsObserver.OnNext(newOperation);
+            var newEntry = new OperationEntry(newOperation, ct,
+                                () =>
+                                {
+                                    combinedCts.Cancel();
+                                    onFinished();
+                                }
+                           );
+
+            return newEntry;
         }
 
         private IObservable<IOperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
-            var operation = _loader.Load(id, source);//.StartWith(new OperationState<T>()).Replay();
+            var operation = _loader.Load(id, source, ct: ct);//.StartWith(new OperationState<T>()).Replay();
             //operation.Connect();
 
             if (_cache != null)

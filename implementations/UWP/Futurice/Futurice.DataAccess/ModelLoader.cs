@@ -7,6 +7,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
 
@@ -21,16 +22,16 @@ namespace Futurice.DataAccess
             _cache = defaultCache;
         }
 
-        protected abstract void LoadImplementation(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target);
+        protected abstract void LoadImplementation(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target, CancellationToken ct = default(CancellationToken));
 
-        protected abstract void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target);
+        protected abstract void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target, CancellationToken ct = default(CancellationToken));
 
         protected virtual ICache GetCache(ModelIdentifier id)
         {
             return _cache;
         }
 
-        private void LoadData(ModelIdentifier id, ModelSource source, Subject<IOperationState<IBuffer>> target)
+        private void LoadData(ModelIdentifier id, ModelSource source, Subject<IOperationState<IBuffer>> target, CancellationToken ct = default(CancellationToken))
         {
             ICache cache = GetCache(id);
 
@@ -38,7 +39,7 @@ namespace Futurice.DataAccess
             {
                 case ModelSource.Server:
                     target.OnResult(it => cache?.Save(id, it));
-                    LoadImplementation(id, target);
+                    LoadImplementation(id, target, ct);
                     break;
 
                 case ModelSource.Disk:
@@ -49,7 +50,7 @@ namespace Futurice.DataAccess
                     }
                     else
                     {
-                        cache.Load(id, target);
+                        cache.Load(id, target, ct);
                     }
                     break;
 
@@ -58,7 +59,7 @@ namespace Futurice.DataAccess
             }
         }
 
-        public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source, double loadOperationProgressShare = 0.8)
+        public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source, double loadOperationProgressShare = 0.8, CancellationToken ct = default(CancellationToken))
         {
             var loadOperationStates = new Subject<IOperationState<IBuffer>>();
             var parseOperationStates = new Subject<IOperationState<object>>();
@@ -66,7 +67,7 @@ namespace Futurice.DataAccess
             var combinedReplayStates = new ReplaySubject<IOperationState<object>>();
             Observable.CombineLatest(
                     loadOperationStates
-                        .OnResult(buffer => ParseImplementation(id, buffer, parseOperationStates))
+                        .OnResult(buffer => ParseImplementation(id, buffer, parseOperationStates, ct))
                         .StartWith(null as IOperationState<IBuffer>),
 
                     parseOperationStates
@@ -102,7 +103,7 @@ namespace Futurice.DataAccess
                 })
                 .Subscribe(combinedReplayStates);
             
-            LoadData(id, source, loadOperationStates);
+            LoadData(id, source, loadOperationStates, ct);
 
             return combinedReplayStates;
         }
