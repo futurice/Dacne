@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Reactive.Subjects;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace Futurice.DataAccess
 {
@@ -43,7 +44,7 @@ namespace Futurice.DataAccess
 
         public bool TryRegisterCancellation(CancellationToken ct)
         {
-            lock(_lock)
+            lock (_lock)
             {
                 if (IsCancelled)
                 {
@@ -101,7 +102,30 @@ namespace Futurice.DataAccess
             return Identifier.GetHashCode() + 3 * Source.GetHashCode();
         }
     }
-    
+
+    class UpdateKey
+    {
+        public readonly ModelIdentifier Identifier;
+        public readonly object UpdateId;
+
+        public UpdateKey(ModelIdentifier identifier, object updateId)
+        {
+            Identifier = identifier;
+            UpdateId = updateId;
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as UpdateKey;
+            return Identifier.Equals(other.Identifier) && UpdateId.Equals(other.UpdateId);
+        }
+
+        public override int GetHashCode()
+        {
+            return Identifier.GetHashCode() + 3 * UpdateId.GetHashCode();
+        }
+    }
+
     public enum SourcePreference
     {
         /// <summary>
@@ -139,7 +163,7 @@ namespace Futurice.DataAccess
         /// </summary>
         Delayed, // Don't start any operations
     }
-    
+
     public enum ModelSource
     {
         Unknown,
@@ -159,7 +183,7 @@ namespace Futurice.DataAccess
     /// A class that manages ongoing operations and bindings to their updates, manages a memory cache for the models, and has the logic to load models according to different settings.
     /// </summary>
     public abstract class ModelRepository
-    { 
+    {
         private readonly ModelLoader _loader;
         private readonly IMemoryCache _cache;
         private readonly ConcurrentDictionary<OperationKey, OperationEntry> _ongoingOperations = new ConcurrentDictionary<OperationKey, OperationEntry>();
@@ -174,7 +198,9 @@ namespace Futurice.DataAccess
 
             Operations = _operationsObserver;
         }
-        
+
+        #region GET
+
         /// <summary>
         /// Takes the model information and operation settings and returns and stream of updates which can be accessed to read the progress and result of the operation.
         /// </summary>
@@ -185,7 +211,8 @@ namespace Futurice.DataAccess
         public IObservable<IOperationState<T>> Get<T>(ModelIdentifier<T> id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default(CancellationToken)) where T : class
         {
 
-            switch (source) {
+            switch (source)
+            {
                 case SourcePreference.Cache:
                     return GetFromCache<T>(id, ct);
 
@@ -206,7 +233,8 @@ namespace Futurice.DataAccess
             }
         }
 
-        private IObservable<IOperationState<T>> GetFromCache<T>(ModelIdentifier id, CancellationToken ct) where T : class {
+        private IObservable<IOperationState<T>> GetFromCache<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        {
             var result = _cache?.Get<T>(id);
 
             return result != null ?
@@ -241,20 +269,20 @@ namespace Futurice.DataAccess
         private IObservable<IOperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
             var key = new OperationKey(id, source);
-            
-            var entry = _ongoingOperations.AddOrUpdate(key, 
-                _ => CreateOperationEntry<T>(id, source, ct, key), 
-                (_, oldEntry) => oldEntry.TryRegisterCancellation(ct) 
-                                    ? oldEntry 
+
+            var entry = _ongoingOperations.AddOrUpdate(key,
+                _ => CreateOperationEntry<T>(id, source, ct, key),
+                (_, oldEntry) => oldEntry.TryRegisterCancellation(ct)
+                                    ? oldEntry
                                     : CreateOperationEntry<T>(id, source, ct, key)
             );
-            
+
             var operation = (IObservable<IOperationState<T>>)entry.Operation;
 
             return operation
                 .TakeWhile(_ => !ct.IsCancellationRequested)
-                .Concat(Observable.Defer(() => ct.IsCancellationRequested 
-                                                ? Observable.Return(new OperationState<T>(isCancelled: true)) 
+                .Concat(Observable.Defer(() => ct.IsCancellationRequested
+                                                ? Observable.Return(new OperationState<T>(isCancelled: true))
                                                 : Observable.Empty<OperationState<T>>()));
         }
 
@@ -301,7 +329,7 @@ namespace Futurice.DataAccess
 
             return operation
                 // TODO: Should we start with an empty operationstate ?
-                
+
                 .Select(modelsState =>
                 {
                     T result = null;
@@ -316,5 +344,42 @@ namespace Futurice.DataAccess
                 .TakeWhile(s => s.Progress <= 100);
 
         }
+
+        #endregion
+
+        #region UPDATE
+
+        public enum UpdateSettings
+        {
+            None,
+            SetImmediately,
+            SetOnSync,
+            OverrideOnUpdate,
+        }
+
+        private readonly ConcurrentDictionary<UpdateKey, Action<object>> _updates = new ConcurrentDictionary<UpdateKey, Action<object>>();
+
+        public void Commit<T>(ModelIdentifier<T> modelIdentifier, Action<T> update, object updateToken = null) where T : class
+        {
+            if (updateToken == null)
+            {
+                updateToken = new object();
+            }
+
+            var key = new UpdateKey(modelIdentifier, updateToken);
+            _updates.AddOrUpdate(key, (object t) => update(t as T), (_, __) => (object t) => update(t as T));
+
+            // if SetImmediately, find model and run update. Need to cache copy of old if parser needs to know it.
+        }
+        
+
+
+        private IObservable<IOperationState<T>> Push<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
+        {
+            // ModelSender.Push(original, updated, object[] updateTokens) 
+        }
+
+        #endregion
+
     }
 }
