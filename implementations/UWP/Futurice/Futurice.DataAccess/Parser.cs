@@ -11,7 +11,7 @@ namespace Futurice.DataAccess
 
         protected override void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target)
         {
-            target.OnNextResult(ParseImplementation(id, data), id, 100, ModelSource.Server);
+            target.OnCompleteResult(ParseImplementation(id, data), id, 100, ModelSource.Server);
             target.OnCompleted();
         }
 

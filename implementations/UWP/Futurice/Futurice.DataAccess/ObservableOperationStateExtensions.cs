@@ -110,9 +110,15 @@ namespace Futurice.DataAccess
             return self;
         }
 
-        public static IObserver<IOperationState<TResult>> OnNextResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress, ModelSource source = ModelSource.Unknown) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnCompleteResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress, ModelSource source = ModelSource.Unknown) where TResult : class
         {
-            self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress, source: source));
+            self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress, source: source, resultProgress: 100));
+            return self;
+        }
+
+        public static IObserver<IOperationState<TResult>> OnIncompleteResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress, double resultProgress, ModelSource source = ModelSource.Unknown) where TResult : class
+        {
+            self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress, source: source, resultProgress: resultProgress));
             return self;
         }
 

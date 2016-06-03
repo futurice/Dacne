@@ -118,6 +118,7 @@
     <Compile Include="DataContractXmlParser.cs" />
     <Compile Include="DataLoader.cs" />
     <Compile Include="IOperationStateBase.cs" />
+    <Compile Include="IUpdateableModel.cs" />
     <Compile Include="ModelId.cs" />
     <Compile Include="ModelLoader.cs" />
     <Compile Include="ModelRepository.cs" />

@@ -54,37 +54,43 @@ namespace SampleApplication
         private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             var cts = new CancellationTokenSource();
-            cts.Cancel();
-            
+            //cts.Cancel();
+
+
+            object titleUpdateToken = new object();
+            var articleid = ModelLoader.GetBbcArticleIdentifier(36438786, "uk", "england", "surrey");
+            App.Repository.Commit(
+articleid,
+                //ModelLoader.GetBbcArticlesIdentifier(),
+                article => article.Title = "adfasdf",
+                titleUpdateToken
+                );
+
+            var i = 0;
             // Option A
-            for (int i = 0; i < 100; i++) {
-                await Task.Delay(TimeSpan.FromMilliseconds(10 * i));
+            //for (int i = 0; i < 100; i++) {
+            await Task.Delay(TimeSpan.FromMilliseconds(10 * i));
 
                 var tb = new TextBlock();
                 TextBlocksPanel.Children.Add(tb);
                 int j = i;
                 int count = 0;
-                App.Repository.Get(
-                    //ModelLoader.GetBbcArticleId(35836853, "world", "asia"),
-                    ModelLoader.GetBbcArticlesIdentifier(),
-                    SourcePreference.CacheWithServerFallback,
+            App.Repository.Get(
+                articleid,
+                //ModelLoader.GetBbcArticlesIdentifier(),
+                SourcePreference.CacheWithServerFallback,
                     i % 2 == 0 ? cts.Token : CancellationToken.None)
                     //.SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
                     .ObserveOn(UIDispatcherScheduler.Default)
                     .SubscribeStateChange(
                         onProgress: progress => tb.Text = progress.ToString() + "%",
-                        onResult: result => tb.Text = result.Count().ToString(),
+                        //onResult: result => tb.Text = result.Count().ToString(),
                         onError: error => tb.Text = error.ToString(),
                         onCompleted: state => tb.Text = state?.IsCancelled ?? true
                                                             ? ":("
-                                                            : state?.Result?.ElementAtOrDefault(j)?.Title + " / " + state?.ResultSource.ToString()
+                                                            : state?.Result?.Title + " / " + state?.ResultSource.ToString()
                     );
-            }
-
-            App.Repository.Commit(
-                ModelLoader.GetBbcArticleIdentifier(35836853, "world", "asia"),
-                article => article.Title = "adfasdf"
-                );
+            //}
 
             /*
             DataContext = await states

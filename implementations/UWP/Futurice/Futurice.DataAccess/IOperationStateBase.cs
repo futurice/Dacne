@@ -7,5 +7,6 @@
         double Progress { get; }
         ModelIdentifier ResultIdentifier { get; }
         ModelSource ResultSource { get; }
+        double ResultProgress { get; set; }
     }
 }

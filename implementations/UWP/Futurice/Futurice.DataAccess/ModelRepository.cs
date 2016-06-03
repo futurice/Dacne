@@ -278,7 +278,7 @@ namespace Futurice.DataAccess
             );
 
             var operation = (IObservable<IOperationState<T>>)entry.Operation;
-
+            
             return operation
                 .TakeWhile(_ => !ct.IsCancellationRequested)
                 .Concat(Observable.Defer(() => ct.IsCancellationRequested
@@ -302,7 +302,7 @@ namespace Futurice.DataAccess
                 subscriptionDisposable.Dispose();
                 connectDisposable?.Dispose();
             };
-
+            
             subscriptionDisposable = newOperation.Subscribe(__ => { }, __ => onFinished(), onFinished);
 
             _operationsObserver.OnNext(newOperation);
@@ -324,7 +324,10 @@ namespace Futurice.DataAccess
 
             if (_cache != null)
             {
-                operation.WhereResultChanged().Subscribe(state => _cache.Set(state.ResultIdentifier, state.Result));
+                operation
+                    .WhereResultChanged()
+                    .Where(state => state.ResultProgress == 100)
+                    .Subscribe(state => _cache.Set(state.ResultIdentifier, state.Result));
             }
 
             return operation
@@ -338,6 +341,21 @@ namespace Futurice.DataAccess
                     {
                         result = modelsState.Result as T;
                         resultId = modelsState.ResultIdentifier;
+
+                        if (modelsState.ResultProgress == 100)
+                        {
+                            UpdateContainer updates = null;
+                            if (_updates.TryGetValue(resultId, out updates))
+                            {
+                                _updates.AddOrUpdate(resultId, (UpdateContainer)null,
+                                    (_, updates2) => {
+                                        updates2.ForEach(entry => result = entry.Update(result) as T);
+                                        updates.Updated = result;
+                                        return updates2;
+                                    }
+                                );
+                            }
+                        }
                     }
                     return new OperationState<T>(result, modelsState.Progress, modelsState.Error, modelsState.IsCancelled, modelsState.ResultSource, resultId);
                 })
@@ -356,28 +374,63 @@ namespace Futurice.DataAccess
             SetOnSync,
             OverrideOnUpdate,
         }
+        
+        private readonly ConcurrentDictionary<ModelIdentifier, UpdateContainer> _updates = new ConcurrentDictionary<ModelIdentifier, UpdateContainer>();
 
-        private readonly ConcurrentDictionary<UpdateKey, Action<object>> _updates = new ConcurrentDictionary<UpdateKey, Action<object>>();
+        public void Commit<T>(ModelIdentifier<T> modelIdentifier, Action<T> update, object updateToken = null) where T : class, IUpdateableModel<T>
+        {
+            Commit(modelIdentifier, model => { update(model); return model; }, updateToken);
+        }
 
-        public void Commit<T>(ModelIdentifier<T> modelIdentifier, Action<T> update, object updateToken = null) where T : class
+        public void Commit<T>(ModelIdentifier<T> modelIdentifier, Func<T, T> update, object updateToken = null) where T : class, IUpdateableModel<T>
         {
             if (updateToken == null)
             {
                 updateToken = new object();
             }
 
-            var key = new UpdateKey(modelIdentifier, updateToken);
-            _updates.AddOrUpdate(key, (object t) => update(t as T), (_, __) => (object t) => update(t as T));
+            _updates.AddOrUpdate(modelIdentifier, 
+                                 _ => new UpdateContainer { new UpdateEntry(updateToken, (object t) => update(t as T)) },
+                                (identifier, container) => {
+                                    var oldUpdate = container.Where(entry => entry.Token == updateToken).FirstOrDefault();
+                                    if (oldUpdate != null) {
+                                        container.Remove(oldUpdate);
+                                    }
 
-            // if SetImmediately, find model and run update. Need to cache copy of old if parser needs to know it.
+                                    container.Updated = null;
+
+                                    container.Add(new UpdateEntry(updateToken, (object t) => update(t as T)));
+
+                                    return container;
+                                }
+            );
+
+            // if SetImmediately, find model and run update. Need to cache copy if old if parser needs to know it.
+        }
+        
+        public class UpdateContainer : List<UpdateEntry>
+        {
+            public object Original { get; set; }
+            public object Updated { get; set; }
+        }
+
+        public class UpdateEntry
+        {
+            public readonly object Token;
+            public readonly Func<object, object> Update;
+
+            public UpdateEntry(object token, Func<object, object> update)
+            {
+                Token = token;
+                Update = update;
+            }
         }
         
 
-
-        private IObservable<IOperationState<T>> Push<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
-        {
-            // ModelSender.Push(original, updated, object[] updateTokens) 
-        }
+        //private IObservable<IOperationState<T>> Push<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
+        //{
+        //    // ModelSender.Push(original, updated, object[] updateTokens) 
+        //}
 
         #endregion
 

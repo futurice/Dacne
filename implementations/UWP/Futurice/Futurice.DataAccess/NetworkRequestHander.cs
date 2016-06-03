@@ -15,7 +15,7 @@ namespace Futurice.DataAccess
             Debug.WriteLine("Request started: " + uri.ToString());
             client.GetBufferAsync(uri).AsTask().ContinueWith(result =>
             {
-                target.OnNextResult(result.Result, null, 100, ModelSource.Server);
+                target.OnCompleteResult(result.Result, null, 100, ModelSource.Server);
                 target.OnCompleted();
                 Debug.WriteLine("Request completed: " + uri.ToString());
             });

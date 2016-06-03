@@ -57,7 +57,7 @@ namespace SampleApplication
 
             // TODO: Try to get existing list from repository
             var list = new List<NewsArticle>();
-            target.OnNextResult(list, AllArticlesId, progress);
+            target.OnIncompleteResult(list, AllArticlesId, progress, 10);
 
             var items = doc.Descendants("item").ToList();
             var itemProgress = (100.0 - progress) / items.Count();
@@ -75,9 +75,11 @@ namespace SampleApplication
 
                 progress = thisId.Equals(id) ? 100 : progress + itemProgress;
 
-                target.OnNextResult(article, thisId, progress);
+                target.OnCompleteResult(article, thisId, progress);
                 list.Add(article);
             }
+
+            target.OnCompleteResult(list, AllArticlesId, 90);
 
             if (progress < 100)
             {
