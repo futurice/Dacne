@@ -44,8 +44,6 @@ namespace SampleApplication
 
     public class BbcParser : Parser
     {
-        private static readonly Regex ID_FROM_LINK = new Regex("[^/]*(?=#)");
-
         protected override void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target)
         {
             var progress = 1.0;
@@ -70,7 +68,7 @@ namespace SampleApplication
                     Title = item.Element("title").Value
                 };
 
-                var idString = ID_FROM_LINK.Match(link).Value;
+                var idString = link.Substring(link.LastIndexOf('/') + 1);
                 var thisId = new BbcArticleIdentifier(idString);
 
                 progress = thisId.Equals(id) ? 100 : progress + itemProgress;

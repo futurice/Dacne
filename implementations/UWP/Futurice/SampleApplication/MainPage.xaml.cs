@@ -56,25 +56,23 @@ namespace SampleApplication
             var cts = new CancellationTokenSource();
             //cts.Cancel();
 
-
             object titleUpdateToken = new object();
-            var articleid = ModelLoader.GetBbcArticleIdentifier(36438786, "uk", "england", "surrey");
+            var articleid = ModelLoader.GetBbcArticleIdentifier(37725544, "business");
             App.Repository.Commit(
-articleid,
-                //ModelLoader.GetBbcArticlesIdentifier(),
-                article => article.Title = "adfasdf",
+                articleid,
+                article => article.Title += " (Updated)",
                 titleUpdateToken
-                );
+            );
 
             var i = 0;
             // Option A
             //for (int i = 0; i < 100; i++) {
-            await Task.Delay(TimeSpan.FromMilliseconds(10 * i));
+            //await Task.Delay(TimeSpan.FromMilliseconds(10 * i));
 
-                var tb = new TextBlock();
-                TextBlocksPanel.Children.Add(tb);
-                int j = i;
-                int count = 0;
+            var tb = new TextBlock();
+            TextBlocksPanel.Children.Add(tb);
+            int j = i;
+            int count = 0;
             App.Repository.Get(
                 articleid,
                 //ModelLoader.GetBbcArticlesIdentifier(),
