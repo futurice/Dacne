@@ -46,7 +46,8 @@ namespace Futurice.DataAccess
                     if (cache == null)
                     {
                         target.OnNextError(new OperationError(message: "Disk cache not set!"), 0, ModelSource.Disk);
-                        target.OnCompleted();
+                        target.OnError(new InvalidOperationException("Disk cache not set!"));
+                        //target.OnCompleted();
                     }
                     else
                     {
@@ -64,6 +65,7 @@ namespace Futurice.DataAccess
             var loadOperationStates = new Subject<IOperationState<IBuffer>>();
             var parseOperationStates = new Subject<IOperationState<object>>();
             
+            // Loading and parsing might be running in parallel so we need some logic to combine the state updates
             var combinedReplayStates = new ReplaySubject<IOperationState<object>>();
             Observable.CombineLatest(
                     loadOperationStates
