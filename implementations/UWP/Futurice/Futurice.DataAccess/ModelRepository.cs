@@ -250,8 +250,8 @@ namespace Futurice.DataAccess
 
         private IObservable<IOperationState<T>> GetFromCacheWithServerFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
         {
-            var resultFromServer = GetFromCache<T>(id, ct);
-            return resultFromServer.WithFallback(() => Get<T>(id, ModelSource.Server, ct));
+            var resultFromCache = GetFromCache<T>(id, ct);
+            return resultFromCache.WithFallback(() => Get<T>(id, ModelSource.Server, ct));
         }
 
         private IObservable<IOperationState<T>> GetFirstFromCacheThenServer<T>(ModelIdentifier id, CancellationToken ct) where T : class
@@ -322,44 +322,43 @@ namespace Futurice.DataAccess
             var operation = _loader.Load(id, source, ct: ct);//.StartWith(new OperationState<T>()).Replay();
             //operation.Connect();
 
-            if (_cache != null)
-            {
-                operation
-                    .WhereResultChanged()
-                    .Where(state => state.ResultProgress == 100)
-                    .Subscribe(state => _cache.Set(state.ResultIdentifier, state.Result));
-            }
+            operation
+                .WhereResultChanged()
+                .Where(state => state.ResultProgress == 100)
+                .Subscribe(state =>
+                {
+                    var result = state.Result as T;
+                    var resultId = state.ResultIdentifier;
+
+                    if (id.Equals(resultId))
+                    {
+                        // We want to run the updates within the synced AddOrUpdate, but only if we actually have updates for this model.
+                        UpdateContainer _ = null;
+                        if (_updates.TryGetValue(resultId, out _) && _ != null)
+                        {
+                            _updates.AddOrUpdate(resultId, (UpdateContainer)null,
+                                (__, modelUpdates) =>
+                                {
+                                    modelUpdates.ForEach(entry => result = entry.Update(result) as T);
+                                    modelUpdates.Updated = result;
+                                    return modelUpdates;
+                                }
+                            );
+                        }
+                    }
+                    
+                    // Result from disk probably shouldn't overwrite result from server in the memory cache?
+                    if (_cache != null)
+                    {
+                        _cache.Set(resultId, result);
+                    }
+                });
 
             return operation
                 // TODO: Should we start with an empty operationstate ?
-
-                .Select(modelsState =>
-                {
-                    T result = null;
-                    ModelIdentifier resultId = null;
-                    if (id.Equals(modelsState.ResultIdentifier))
-                    {
-                        result = modelsState.Result as T;
-                        resultId = modelsState.ResultIdentifier;
-
-                        if (modelsState.ResultProgress == 100)
-                        {
-                            // We want to run the updates within the synced AddOrUpdate, but only if we actually have updates for this model.
-                            UpdateContainer _ = null;
-                            if (_updates.TryGetValue(resultId, out _) && _ != null)
-                            {
-                                _updates.AddOrUpdate(resultId, (UpdateContainer)null,
-                                    (__, modelUpdates) => {
-                                        modelUpdates.ForEach(entry => result = entry.Update(result) as T);
-                                        modelUpdates.Updated = result;
-                                        return modelUpdates;
-                                    }
-                                );
-                            }
-                        }
-                    }
-                    return new OperationState<T>(result, modelsState.Progress, modelsState.Error, modelsState.IsCancelled, modelsState.ResultSource, resultId, modelsState.ResultProgress);
-                })
+                .Select(state =>
+                    new OperationState<T>(state.Result as T, state.Progress, state.Error, state.IsCancelled, state.ResultSource, state.ResultIdentifier, state.ResultProgress)
+                )
                 .TakeWhile(s => s.Progress <= 100);
 
         }
