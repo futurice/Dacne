@@ -89,7 +89,9 @@ namespace Futurice.DataAccess
 
                     var loadError = newLoad.Error ?? oldLoad?.Error;
                     var parseError = newParse?.Error ?? oldParse?.Error;
-                    var latestError = oldLoad != newLoad ? loadError ?? parseError : parseError ?? loadError;
+                    var latestError = oldLoad != newLoad 
+                                        ? loadError ?? parseError 
+                                        : parseError ?? loadError;
 
                     return new OperationState<object>(
                         newParse?.Result,
@@ -99,7 +101,8 @@ namespace Futurice.DataAccess
                         latestError,
                         false, // TODO: Cancelled?
                         source,
-                        newParse?.ResultIdentifier);
+                        newParse?.ResultIdentifier,
+                        newParse?.ResultProgress ?? 0);
                 })
                 .Subscribe(combinedReplayStates);
             

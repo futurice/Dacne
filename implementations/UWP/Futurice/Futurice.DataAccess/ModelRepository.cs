@@ -344,20 +344,21 @@ namespace Futurice.DataAccess
 
                         if (modelsState.ResultProgress == 100)
                         {
-                            UpdateContainer updates = null;
-                            if (_updates.TryGetValue(resultId, out updates))
+                            // We want to run the updates within the synced AddOrUpdate, but only if we actually have updates for this model.
+                            UpdateContainer _ = null;
+                            if (_updates.TryGetValue(resultId, out _) && _ != null)
                             {
                                 _updates.AddOrUpdate(resultId, (UpdateContainer)null,
-                                    (_, updates2) => {
-                                        updates2.ForEach(entry => result = entry.Update(result) as T);
-                                        updates.Updated = result;
-                                        return updates2;
+                                    (__, modelUpdates) => {
+                                        modelUpdates.ForEach(entry => result = entry.Update(result) as T);
+                                        modelUpdates.Updated = result;
+                                        return modelUpdates;
                                     }
                                 );
                             }
                         }
                     }
-                    return new OperationState<T>(result, modelsState.Progress, modelsState.Error, modelsState.IsCancelled, modelsState.ResultSource, resultId);
+                    return new OperationState<T>(result, modelsState.Progress, modelsState.Error, modelsState.IsCancelled, modelsState.ResultSource, resultId, modelsState.ResultProgress);
                 })
                 .TakeWhile(s => s.Progress <= 100);
 
