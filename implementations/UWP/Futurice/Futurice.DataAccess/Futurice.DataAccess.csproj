@@ -122,6 +122,7 @@
     <Compile Include="ModelId.cs" />
     <Compile Include="ModelLoader.cs" />
     <Compile Include="ModelRepository.cs" />
+    <Compile Include="ModelWriter.cs" />
     <Compile Include="NetworkRequestHander.cs" />
     <Compile Include="ObservableOperationStateExtensions.cs" />
     <Compile Include="OperationError.cs" />

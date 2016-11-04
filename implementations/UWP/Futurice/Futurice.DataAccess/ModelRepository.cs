@@ -185,14 +185,16 @@ namespace Futurice.DataAccess
     public abstract class ModelRepository
     {
         private readonly ModelLoader _loader;
+        private readonly ModelWriter _writer;
         private readonly IMemoryCache _cache;
         private readonly ConcurrentDictionary<OperationKey, OperationEntry> _ongoingOperations = new ConcurrentDictionary<OperationKey, OperationEntry>();
 
         public readonly Subject<IObservable<IOperationStateBase>> _operationsObserver = new Subject<IObservable<IOperationStateBase>>();
         public readonly IObservable<IObservable<IOperationStateBase>> Operations;
 
-        public ModelRepository(ModelLoader loader, IMemoryCache cache = null)
+        public ModelRepository(ModelLoader loader, ModelWriter writer = null, IMemoryCache cache = null)
         {
+            _writer = writer;
             _loader = loader;
             _cache = cache;
 
@@ -416,7 +418,62 @@ namespace Futurice.DataAccess
 
             // if SetImmediately, find model and run update. Need to cache copy if old if parser needs to know it.
         }
-        
+
+        private IObservable<IOperationState<T>> SetModel<T>(ModelIdentifier id, ModelSource target, CancellationToken ct = default(CancellationToken)) where T : class
+        {
+            var operation = _writer.Write(id, target, ct: ct);
+
+            operation
+                .WhereResultChanged()
+                .Where(state => state.ResultProgress == 100)
+                .Subscribe(state =>
+                {
+                    var result = state.Result as T;
+                    var resultId = state.ResultIdentifier;
+
+                    if (id.Equals(resultId))
+                    {
+                        // We want to run the updates within the synced AddOrUpdate, but only if we actually have updates for this model.
+                        UpdateContainer _ = null;
+                        if (_updates.TryGetValue(resultId, out _) && _ != null)
+                        {
+                            _updates.AddOrUpdate(resultId, (UpdateContainer)null,
+                                (__, modelUpdates) =>
+                                {
+                                    modelUpdates.ForEach(entry => result = entry.Update(result) as T);
+                                    modelUpdates.Updated = result;
+                                    return modelUpdates;
+                                }
+                            );
+                        }
+                    }
+
+                    // Result from disk probably shouldn't overwrite result from server in the memory cache?
+                    if (_cache != null)
+                    {
+                        _cache.Set(resultId, result);
+                    }
+                });
+
+            return operation
+                // TODO: Should we start with an empty operationstate ?
+                .Select(state =>
+                {
+                    var isMatch = id.Equals(state.ResultIdentifier);
+                    return new OperationState<T>(
+                        isMatch ? state.Result as T : null,
+                        state.Progress,
+                        state.Error,
+                        state.IsCancelled,
+                        state.ResultSource,
+                        isMatch ? state.ResultIdentifier : null,
+                        isMatch ? state.ResultProgress : 0
+                    );
+                })
+                .TakeWhile(s => s.Progress <= 100);
+
+        }
+
         public class UpdateContainer : List<UpdateEntry>
         {
             public object Original { get; set; }
