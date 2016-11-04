@@ -299,7 +299,7 @@ namespace Futurice.DataAccess
                 OperationEntry obj;
                 _ongoingOperations.TryRemove(key, out obj);
 
-                subscriptionDisposable.Dispose();
+                subscriptionDisposable?.Dispose();
                 connectDisposable?.Dispose();
             };
             
@@ -319,8 +319,7 @@ namespace Futurice.DataAccess
 
         private IObservable<IOperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
         {
-            var operation = _loader.Load(id, source, ct: ct);//.StartWith(new OperationState<T>()).Replay();
-            //operation.Connect();
+            var operation = _loader.Load(id, source, ct: ct);
 
             operation
                 .WhereResultChanged()
@@ -357,8 +356,18 @@ namespace Futurice.DataAccess
             return operation
                 // TODO: Should we start with an empty operationstate ?
                 .Select(state =>
-                    new OperationState<T>(state.Result as T, state.Progress, state.Error, state.IsCancelled, state.ResultSource, state.ResultIdentifier, state.ResultProgress)
-                )
+                {
+                    var isMatch = id.Equals(state.ResultIdentifier);
+                    return new OperationState<T>(
+                        isMatch ? state.Result as T : null,
+                        state.Progress,
+                        state.Error,
+                        state.IsCancelled,
+                        state.ResultSource,
+                        isMatch ? state.ResultIdentifier : null,
+                        isMatch ? state.ResultProgress : 0
+                    );
+                })
                 .TakeWhile(s => s.Progress <= 100);
 
         }
