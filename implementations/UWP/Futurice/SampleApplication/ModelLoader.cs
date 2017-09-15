@@ -58,7 +58,7 @@ namespace SampleApplication
             target.OnIncompleteResult(list, AllArticlesId, progress, 10);
 
             var items = doc.Descendants("item").ToList();
-            var itemProgress = (100.0 - progress) / items.Count();
+            var itemProgress = (100.0 - progress) / (items.Count() + 1);
             foreach (var item in items)
             {
                 var link = item.Element("link").Value;
@@ -77,7 +77,8 @@ namespace SampleApplication
                 list.Add(article);
             }
 
-            target.OnCompleteResult(list, AllArticlesId, 90);
+            progress += itemProgress;
+            target.OnCompleteResult(list, AllArticlesId, progress);
 
             if (progress < 100)
             {

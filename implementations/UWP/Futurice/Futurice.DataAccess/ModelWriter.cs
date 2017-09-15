@@ -28,45 +28,45 @@ namespace Futurice.DataAccess
             return _cache;
         }
 
-
-        private void WriteData(ModelIdentifier id, ModelSource source, Subject<IOperationState<IBuffer>> target, CancellationToken ct = default(CancellationToken))
+        private void WriteData(ModelIdentifier id, ModelSource target, Subject<IOperationState<IBuffer>> operation, CancellationToken ct = default(CancellationToken))
         {
             ICache cache = GetCache(id);
 
-            switch (source)
+            switch (target)
             {
                 case ModelSource.Server:
-                    target.OnResult(it => cache?.Save(id, it));
-                    WriteImplementation(id, target, ct);
+                    operation.OnResult(it => cache?.Save(id, it));
+                    WriteImplementation(id, operation, ct);
                     break;
 
                 case ModelSource.Disk:
                     if (cache == null)
                     {
-                        target.OnNextError(new OperationError(message: "Disk cache not set!"), 0, ModelSource.Disk);
-                        target.OnError(new InvalidOperationException("Disk cache not set!"));
-                        //target.OnCompleted();
+                        operation.OnNextError(new OperationError(message: "Disk cache not set!"), 0, ModelSource.Disk);
+                        operation.OnError(new InvalidOperationException("Disk cache not set!"));
+                        //operation.OnCompleted();
                     }
                     else
                     {
-                        cache.Write(id, target, ct);
+                        throw new NotImplementedException("Writing local changes to disk cache not implemented");
+                        //cache.Write(id, operation, ct);
                     }
                     break;
 
                 default:
-                    throw new Exception("Unknown source: " + source);
+                    throw new Exception("Unknown target: " + target);
             }
         }
 
-        public IObservable<IOperationState<object>> Write(ModelIdentifier id, ModelSource source, double WriteOperationProgressShare = 0.8, CancellationToken ct = default(CancellationToken))
+        public IObservable<IOperationState<object>> Write(ModelIdentifier id, ModelSource target, double WriteOperationProgressShare = 0.8, CancellationToken ct = default(CancellationToken))
         {
-            var WriteOperationStates = new Subject<IOperationState<IBuffer>>();
+            var writeOperationStates = new Subject<IOperationState<IBuffer>>();
             var parseOperationStates = new Subject<IOperationState<object>>();
 
-            // Writeing and parsing might be running in parallel so we need some logic to combine the state updates
+            // Writing and parsing might be running in parallel so we need some logic to combine the state updates
             var combinedReplayStates = new ReplaySubject<IOperationState<object>>();
             Observable.CombineLatest(
-                    WriteOperationStates
+                    writeOperationStates
                         .OnResult(buffer => ParseImplementation(id, buffer, parseOperationStates, ct))
                         .StartWith(null as IOperationState<IBuffer>),
 
@@ -100,13 +100,13 @@ namespace Futurice.DataAccess
                             : newWrite.Progress * WriteOperationProgressShare + ((newParse?.Progress ?? 0) * (1.0 - WriteOperationProgressShare)),
                         latestError,
                         false, // TODO: Cancelled?
-                        source,
+                        target,
                         newParse?.ResultIdentifier,
                         newParse?.ResultProgress ?? 0);
                 })
                 .Subscribe(combinedReplayStates);
 
-            WriteData(id, source, WriteOperationStates, ct);
+            WriteData(id, target, writeOperationStates, ct);
 
             return combinedReplayStates;
         }

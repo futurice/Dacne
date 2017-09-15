@@ -56,8 +56,9 @@ namespace SampleApplication
             var cts = new CancellationTokenSource();
             //cts.Cancel();
 
-            object titleUpdateToken = new object();
-            var articleid = ModelLoader.GetBbcArticleIdentifier(37725544, "business");
+            var titleUpdateToken = new object();
+            var articleid = ModelLoader.GetBbcArticleIdentifier(41278545, "uk");
+
             App.Repository.Commit(
                 articleid,
                 article => article.Title += " (Updated)",
@@ -65,12 +66,14 @@ namespace SampleApplication
             );
 
             var i = 0;
-            // Option A
+            // Option A:
+
             //for (int i = 0; i < 100; i++) {
             //await Task.Delay(TimeSpan.FromMilliseconds(10 * i));
 
             var tb = new TextBlock();
             TextBlocksPanel.Children.Add(tb);
+
             int j = i;
             int count = 0;
             App.Repository.Get(
@@ -90,6 +93,7 @@ namespace SampleApplication
                     );
             //}
 
+            // Option B
             /*
             DataContext = await states
                 .Where(state => state.Result != null)

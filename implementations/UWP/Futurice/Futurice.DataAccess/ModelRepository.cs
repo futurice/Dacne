@@ -493,9 +493,9 @@ namespace Futurice.DataAccess
         }
         
 
-        //private IObservable<IOperationState<T>> Push<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
+        //private IObservable<IOperationState<T>> Push<T>(ModelIdentifier id, ModelSource target, CancellationToken ct = default(CancellationToken)) where T : class
         //{
-        //    // ModelSender.Push(original, updated, object[] updateTokens) 
+        //    ModelSender.Push(original, updated, object[] updateTokens) 
         //}
 
         #endregion
