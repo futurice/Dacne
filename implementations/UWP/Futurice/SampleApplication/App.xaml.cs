@@ -38,7 +38,7 @@ namespace SampleApplication
             this.InitializeComponent();
             this.Suspending += OnSuspending;
             
-            Repository = new ModelRepository(new ModelLoader());
+            Repository = new ModelRepository(new ModelLoader(), new ModelWriter());
 
         }
 

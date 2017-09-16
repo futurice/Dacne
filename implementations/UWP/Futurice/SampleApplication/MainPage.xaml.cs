@@ -57,12 +57,13 @@ namespace SampleApplication
             //cts.Cancel();
 
             var titleUpdateToken = new object();
-            var articleid = ModelLoader.GetBbcArticleIdentifier(41278545, "uk");
+            var theArticle = ModelLoader.GetBbcArticleIdentifier(41292528, "uk");
 
             App.Repository.Commit(
-                articleid,
-                article => article.Title += " (Updated)",
-                titleUpdateToken
+                theArticle.ChangeTitle(
+                    title => title += " <- My fav!",
+                    titleUpdateToken
+                )
             );
 
             var i = 0;
@@ -72,12 +73,14 @@ namespace SampleApplication
             //await Task.Delay(TimeSpan.FromMilliseconds(10 * i));
 
             var tb = new TextBlock();
+            tb.Tapped += Tb_Tapped;
+
             TextBlocksPanel.Children.Add(tb);
 
+            //int count = 0;
             int j = i;
-            int count = 0;
             App.Repository.Get(
-                articleid,
+                theArticle,
                 //ModelLoader.GetBbcArticlesIdentifier(),
                 SourcePreference.CacheWithServerFallback,
                     i % 2 == 0 ? cts.Token : CancellationToken.None)
@@ -103,6 +106,11 @@ namespace SampleApplication
 
             // Option C
             //DataContext = await states.AwaitResultAsync();
+        }
+
+        private void Tb_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            App.Repository.PushAll(ModelSource.Server);
         }
     }
 

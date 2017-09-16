@@ -340,6 +340,8 @@ namespace Futurice.DataAccess
                             _updates.AddOrUpdate(resultId, (UpdateContainer)null,
                                 (__, modelUpdates) =>
                                 {
+                                    var updateableResult = result as IUpdateableModel<T>;
+                                    modelUpdates.Original = updateableResult.CloneForUpdate();
                                     modelUpdates.ForEach(entry => result = entry.Update(result) as T);
                                     modelUpdates.Updated = result;
                                     return modelUpdates;
@@ -377,17 +379,15 @@ namespace Futurice.DataAccess
         #endregion
 
         #region UPDATE
-
-        public enum UpdateSettings
-        {
-            None,
-            SetImmediately,
-            SetOnSync,
-            OverrideOnUpdate,
-        }
         
         private readonly ConcurrentDictionary<ModelIdentifier, UpdateContainer> _updates = new ConcurrentDictionary<ModelIdentifier, UpdateContainer>();
 
+        public void Commit((ModelIdentifier id, UpdateEntry update) newUpdate)
+        {
+            Commit(newUpdate.id, newUpdate.update);
+        }
+
+        /*
         public void Commit<T>(ModelIdentifier<T> modelIdentifier, Action<T> update, object updateToken = null) where T : class, IUpdateableModel<T>
         {
             Commit(modelIdentifier, model => { update(model); return model; }, updateToken);
@@ -399,18 +399,22 @@ namespace Futurice.DataAccess
             {
                 updateToken = new object();
             }
+        }
+        */
 
+        public void Commit(ModelIdentifier modelIdentifier, UpdateEntry newUpdate)
+        {
             _updates.AddOrUpdate(modelIdentifier, 
-                                 _ => new UpdateContainer { new UpdateEntry(updateToken, (object t) => update(t as T)) },
+                                 _ => new UpdateContainer { newUpdate },
                                 (identifier, container) => {
-                                    var oldUpdate = container.Where(entry => entry.Token == updateToken).FirstOrDefault();
+                                    var oldUpdate = container.Where(entry => entry.Token == newUpdate.Token).FirstOrDefault();
                                     if (oldUpdate != null) {
                                         container.Remove(oldUpdate);
                                     }
 
                                     container.Updated = null;
 
-                                    container.Add(new UpdateEntry(updateToken, (object t) => update(t as T)));
+                                    container.Add(newUpdate);
 
                                     return container;
                                 }
@@ -419,86 +423,62 @@ namespace Futurice.DataAccess
             // if SetImmediately, find model and run update. Need to cache copy if old if parser needs to know it.
         }
 
-        private IObservable<IOperationState<T>> SetModel<T>(ModelIdentifier id, ModelSource target, CancellationToken ct = default(CancellationToken)) where T : class
+        public IObservable<IOperationState<object>> Push(ModelIdentifier id, ModelSource target, CancellationToken ct = default)
         {
-            var operation = _writer.Write(id, target, ct: ct);
-
-            operation
-                .WhereResultChanged()
-                .Where(state => state.ResultProgress == 100)
-                .Subscribe(state =>
-                {
-                    var result = state.Result as T;
-                    var resultId = state.ResultIdentifier;
-
-                    if (id.Equals(resultId))
-                    {
-                        // We want to run the updates within the synced AddOrUpdate, but only if we actually have updates for this model.
-                        UpdateContainer _ = null;
-                        if (_updates.TryGetValue(resultId, out _) && _ != null)
-                        {
-                            _updates.AddOrUpdate(resultId, (UpdateContainer)null,
-                                (__, modelUpdates) =>
-                                {
-                                    modelUpdates.ForEach(entry => result = entry.Update(result) as T);
-                                    modelUpdates.Updated = result;
-                                    return modelUpdates;
-                                }
-                            );
-                        }
-                    }
-
-                    // Result from disk probably shouldn't overwrite result from server in the memory cache?
-                    if (_cache != null)
-                    {
-                        _cache.Set(resultId, result);
-                    }
-                });
-
-            return operation
-                // TODO: Should we start with an empty operationstate ?
-                .Select(state =>
-                {
-                    var isMatch = id.Equals(state.ResultIdentifier);
-                    return new OperationState<T>(
-                        isMatch ? state.Result as T : null,
-                        state.Progress,
-                        state.Error,
-                        state.IsCancelled,
-                        state.ResultSource,
-                        isMatch ? state.ResultIdentifier : null,
-                        isMatch ? state.ResultProgress : 0
-                    );
-                })
-                .TakeWhile(s => s.Progress <= 100);
-
-        }
-
-        public class UpdateContainer : List<UpdateEntry>
-        {
-            public object Original { get; set; }
-            public object Updated { get; set; }
-        }
-
-        public class UpdateEntry
-        {
-            public readonly object Token;
-            public readonly Func<object, object> Update;
-
-            public UpdateEntry(object token, Func<object, object> update)
+            if (_updates.TryGetValue(id, out var update))
             {
-                Token = token;
-                Update = update;
+                return _writer.Write(id, update, target, ct: ct);
             }
-        }
-        
 
-        //private IObservable<IOperationState<T>> Push<T>(ModelIdentifier id, ModelSource target, CancellationToken ct = default(CancellationToken)) where T : class
-        //{
-        //    ModelSender.Push(original, updated, object[] updateTokens) 
-        //}
+            throw new InvalidOperationException("No updates for the given model: " + id);
+        }
+
+        public IObservable<IOperationState<object>> PushAll(ModelSource target, CancellationToken ct = default)
+        {
+            return 
+                _updates.Aggregate<KeyValuePair<ModelIdentifier, UpdateContainer>, IObservable<IOperationState<object>>>(
+                    null,
+                    (acc, update) => {
+                        var writeOp = _writer.Write(update.Key, update.Value, target, ct);
+                        if (acc != null)
+                        {
+                            return acc.Merge(writeOp);
+                        }
+
+                        return writeOp;
+                    }
+                );            
+        }
 
         #endregion
 
+    }
+
+    public enum UpdateSettings
+    {
+        None,
+        SetImmediately,
+        SetOnSync,
+        OverrideOnUpdate,
+    }
+
+    public class UpdateContainer : List<UpdateEntry>
+    {
+        // TODO: Take into account
+        public UpdateSettings Settings { get; set; }
+        public object Original { get; set; }
+        public object Updated { get; set; }
+    }
+
+    public class UpdateEntry
+    {
+        public readonly object Token;
+        public readonly Func<object, object> Update;
+
+        public UpdateEntry(object token, Func<object, object> update)
+        {
+            Token = token;
+            Update = update;
+        }
     }
 }

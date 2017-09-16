@@ -5,10 +5,11 @@
     "Microsoft.ApplicationInsights.WindowsApps": "1.0.0",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0",
     "ReactiveProperty": "2.2.7.1",
-    "Rx-Main": "2.2.5"
+    "Rx-Main": "2.2.5",
+    "System.ValueTuple": "4.4.0"
   },
   "frameworks": {
-    "uap10.0": {}
+    "uap10.0.10240": {}
   },
   "runtimes": {
     "win10-arm": {},

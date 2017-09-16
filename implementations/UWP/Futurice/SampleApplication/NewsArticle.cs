@@ -22,4 +22,9 @@ namespace SampleApplication
             };
         }
     }
+
+    public interface IUpdateableNewsArticle
+    {
+        string Title { get; set; }
+    }
 }

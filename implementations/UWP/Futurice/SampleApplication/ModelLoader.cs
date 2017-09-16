@@ -3,20 +3,35 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
-using System.Threading.Tasks;
 using Futurice.DataAccess;
 using Windows.Storage.Streams;
-using System.Collections.Concurrent;
 using System.Xml.Linq;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
 using System.Threading;
+using System.Diagnostics;
 
 namespace SampleApplication
 {
+    public class ModelWriter : Futurice.DataAccess.ModelWriter
+    {
+        protected override void WriteImplementation(ModelIdentifier id, UpdateContainer update, ModelSource target, IObserver<IOperationState<object>> operation, CancellationToken ct = default)
+        {
+            if (id is BbcArticleIdentifier articleId)
+            {
+                var original = (NewsArticle)update.Original;
+                var updated = (NewsArticle)update.Updated;
+
+                if (updated.Title != original.Title)
+                {
+                    Debug.WriteLine("Title updated from '" + original.Title + "' to '" + updated.Title);
+                }
+
+                operation.OnCompleteResult(id, id, 100);
+            }
+        }
+    }
+
     public class ModelLoader : Futurice.DataAccess.ModelLoader
     {
         protected override void LoadImplementation(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target, CancellationToken ct)
@@ -31,7 +46,7 @@ namespace SampleApplication
             new BbcParser().Parse(id, data, target);
         }
         
-        public static ModelIdentifier<NewsArticle> GetBbcArticleIdentifier(int item, params string[] sections)
+        public static BbcArticleIdentifier GetBbcArticleIdentifier(int item, params string[] sections)
         {
             return BbcParser.CreateItemId(item, sections);
         }
@@ -97,11 +112,43 @@ namespace SampleApplication
         public static readonly AllBbcArticlesIdentifier AllArticlesId = new AllBbcArticlesIdentifier();
     }
 
+    // Should these be called ModelProxies -> BbcArticleProxy ?
     public class BbcArticleIdentifier : SimpleModelIdentifier<NewsArticle>
     {
         public BbcArticleIdentifier(string id) : base(id) { }
-    }
 
+        public (ModelIdentifier id, UpdateEntry update) ChangeTitle(Func<string, string> update, object updateToken = null)
+        {
+            return (
+                this,
+                new UpdateEntry(
+                    updateToken,
+                    old => {
+                        var article = (NewsArticle)old;
+                        article.Title = update(article.Title);
+                        return old;
+                    }
+                )
+            );
+        }
+
+        public (ModelIdentifier id, UpdateEntry update) SetTitle(string newTitle, object updateToken = null)
+        {
+            return (
+                this,
+                new UpdateEntry(
+                    updateToken,
+                    old => ((NewsArticle)old).Title = newTitle
+                )
+            );
+        }
+
+        //public (ModelIdentifier id, UpdateEntry update) Update(Func<IUpdateableNewsArticle, IUpdateableNewsArticle> update, object updateToken = null)
+        //{
+        //    return (this, new UpdateEntry(updateToken, old => update((NewsArticle)old)));
+        //}
+    }
+    
     public class AllBbcArticlesIdentifier : ModelIdentifier<IEnumerable<NewsArticle>>
     {
 
