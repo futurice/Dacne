@@ -6,19 +6,19 @@ namespace Futurice.DataAccess
     /// <summary>
     /// Identifies a model of a specific type.
     /// </summary>
-    public abstract class ModelIdentifier : IEquatable<ModelIdentifier>
+    public abstract class ModelIdentifierBase : IEquatable<ModelIdentifierBase>
     {
         public int Completness { get; }
 
-        public virtual bool Equals(ModelIdentifier other)
+        public virtual bool Equals(ModelIdentifierBase other)
         {
             return this == other;
         }
     }
 
-    public class ModelIdentifier<T> : ModelIdentifier
+    public class ModelIdentifier<T> : ModelIdentifierBase
     {
-        public override bool Equals(ModelIdentifier other)
+        public override bool Equals(ModelIdentifierBase other)
         {
             if (other == null)
             {
@@ -38,7 +38,7 @@ namespace Futurice.DataAccess
 
         public TKey Key { get; private set; }
 
-        public override bool Equals(ModelIdentifier other)
+        public override bool Equals(ModelIdentifierBase other)
         {
             return this == other || (other as KeyedModelIdentifier<T, TKey>)?.Key.Equals(Key) == true;
         }

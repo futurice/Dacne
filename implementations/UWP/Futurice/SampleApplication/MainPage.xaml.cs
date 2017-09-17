@@ -1,23 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Futurice.DataAccess;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 using System.Reactive.Linq;
 using System.Threading;
-using System.Diagnostics;
-using Reactive.Bindings;
-using System.Threading.Tasks;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -33,7 +20,7 @@ namespace SampleApplication
 
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
             /*
             _states = App.Repository.Get<NewsArticle>(new ModelIdentifier("testmodelid"), SourcePreference.Cache, CancellationToken.None)
@@ -43,11 +30,8 @@ namespace SampleApplication
             Progress = _states.Select(state => state.Error?.ToString() ?? state.Result?.Title ?? state.Progress.ToString()).ToReadOnlyReactiveProperty();
             */
 
-            this.Loaded += MainPage_Loaded;
+            Loaded += MainPage_Loaded;
         }
-
-        public ReadOnlyReactiveProperty<string> Progress { get; private set; }
-
 
         public string Error { get; set; }
 
@@ -85,7 +69,7 @@ namespace SampleApplication
                 SourcePreference.CacheWithServerFallback,
                     i % 2 == 0 ? cts.Token : CancellationToken.None)
                     //.SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
-                    .ObserveOn(UIDispatcherScheduler.Default)
+                    .ObserveOn(SynchronizationContext.Current)
                     .SubscribeStateChange(
                         onProgress: progress => tb.Text = progress.ToString() + "%",
                         //onResult: result => tb.Text = result.Count().ToString(),
@@ -112,17 +96,6 @@ namespace SampleApplication
         {
             App.Repository.PushAll(ModelSource.Server);
         }
-    }
-
-    public class RowViewModel
-    {
-        public ReadOnlyReactiveProperty<string> Progress { get; private set; }
-        
-        public void Load()
-        {
-
-        }
-
     }
     
 }

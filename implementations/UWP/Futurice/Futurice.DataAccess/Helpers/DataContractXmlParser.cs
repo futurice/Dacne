@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Reactive.Subjects;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Linq;
 using Windows.Storage.Streams;
 
 namespace Futurice.DataAccess
@@ -18,7 +15,7 @@ namespace Futurice.DataAccess
             this.type = type;
         }
 
-        protected override object ParseImplementation(ModelIdentifier id, IBuffer data)
+        protected override object ParseImplementation(ModelIdentifierBase id, IBuffer data)
         {
             using (var reader = XmlReader.Create(data.AsStream(), new XmlReaderSettings { IgnoreProcessingInstructions = true, DtdProcessing = DtdProcessing.Ignore }))
             {

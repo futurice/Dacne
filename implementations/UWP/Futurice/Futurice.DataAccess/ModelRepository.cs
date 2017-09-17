@@ -12,14 +12,14 @@ using System.Runtime.CompilerServices;
 
 namespace Futurice.DataAccess
 {
-    public class ModelIdentifierComparer : IEqualityComparer<ModelIdentifier>
+    public class ModelIdentifierComparer : IEqualityComparer<ModelIdentifierBase>
     {
-        public bool Equals(ModelIdentifier x, ModelIdentifier y)
+        public bool Equals(ModelIdentifierBase x, ModelIdentifierBase y)
         {
             return x.Equals(y);
         }
 
-        public int GetHashCode(ModelIdentifier obj)
+        public int GetHashCode(ModelIdentifierBase obj)
         {
             return obj.GetHashCode();
         }
@@ -82,10 +82,10 @@ namespace Futurice.DataAccess
 
     class OperationKey
     {
-        public readonly ModelIdentifier Identifier;
+        public readonly ModelIdentifierBase Identifier;
         public readonly ModelSource Source;
 
-        public OperationKey(ModelIdentifier identifier, ModelSource source)
+        public OperationKey(ModelIdentifierBase identifier, ModelSource source)
         {
             Identifier = identifier;
             Source = source;
@@ -105,10 +105,10 @@ namespace Futurice.DataAccess
 
     class UpdateKey
     {
-        public readonly ModelIdentifier Identifier;
+        public readonly ModelIdentifierBase Identifier;
         public readonly object UpdateId;
 
-        public UpdateKey(ModelIdentifier identifier, object updateId)
+        public UpdateKey(ModelIdentifierBase identifier, object updateId)
         {
             Identifier = identifier;
             UpdateId = updateId;
@@ -174,25 +174,25 @@ namespace Futurice.DataAccess
 
     public interface IMemoryCache
     {
-        T Get<T>(ModelIdentifier id) where T : class;
-        void Set<T>(ModelIdentifier id, T model) where T : class;
+        T Get<T>(ModelIdentifierBase id) where T : class;
+        void Set<T>(ModelIdentifierBase id, T model) where T : class;
 
     }
 
     /// <summary>
     /// A class that manages ongoing operations and bindings to their updates, manages a memory cache for the models, and has the logic to load models according to different settings.
     /// </summary>
-    public abstract class ModelRepository
+    public class ModelRepository
     {
-        private readonly ModelLoader _loader;
-        private readonly ModelWriter _writer;
+        private readonly ModelLoaderBase _loader;
+        private readonly ModelWriterBase _writer;
         private readonly IMemoryCache _cache;
         private readonly ConcurrentDictionary<OperationKey, OperationEntry> _ongoingOperations = new ConcurrentDictionary<OperationKey, OperationEntry>();
 
         public readonly Subject<IObservable<IOperationStateBase>> _operationsObserver = new Subject<IObservable<IOperationStateBase>>();
         public readonly IObservable<IObservable<IOperationStateBase>> Operations;
 
-        public ModelRepository(ModelLoader loader, ModelWriter writer = null, IMemoryCache cache = null)
+        public ModelRepository(ModelLoaderBase loader, ModelWriterBase writer = null, IMemoryCache cache = null)
         {
             _writer = writer;
             _loader = loader;
@@ -210,7 +210,7 @@ namespace Futurice.DataAccess
         /// <param name="id">Identifier for which to get the model object.</param>
         /// <param name="source">Determines the sources from which the model is loaded from, or if an request should be started at all.</param>
         /// <returns>Stream of updates from which the progress and result of the operation can be accessed from.</returns>
-        public IObservable<IOperationState<T>> Get<T>(ModelIdentifier<T> id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default(CancellationToken)) where T : class
+        public IObservable<IOperationState<T>> Get<T>(ModelIdentifier<T> id, SourcePreference source = SourcePreference.ServerWithCacheFallback, CancellationToken ct = default) where T : class
         {
 
             switch (source)
@@ -235,7 +235,7 @@ namespace Futurice.DataAccess
             }
         }
 
-        private IObservable<IOperationState<T>> GetFromCache<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        private IObservable<IOperationState<T>> GetFromCache<T>(ModelIdentifierBase id, CancellationToken ct) where T : class
         {
             var result = _cache?.Get<T>(id);
 
@@ -244,19 +244,19 @@ namespace Futurice.DataAccess
                 Get<T>(id, ModelSource.Disk, ct);
         }
 
-        private IObservable<IOperationState<T>> GetFromServerWithCacheFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        private IObservable<IOperationState<T>> GetFromServerWithCacheFallback<T>(ModelIdentifierBase id, CancellationToken ct) where T : class
         {
             var resultFromServer = Get<T>(id, ModelSource.Server, ct);
             return resultFromServer.WithFallback(() => GetFromCache<T>(id, ct));
         }
 
-        private IObservable<IOperationState<T>> GetFromCacheWithServerFallback<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        private IObservable<IOperationState<T>> GetFromCacheWithServerFallback<T>(ModelIdentifierBase id, CancellationToken ct) where T : class
         {
             var resultFromCache = GetFromCache<T>(id, ct);
             return resultFromCache.WithFallback(() => Get<T>(id, ModelSource.Server, ct));
         }
 
-        private IObservable<IOperationState<T>> GetFirstFromCacheThenServer<T>(ModelIdentifier id, CancellationToken ct) where T : class
+        private IObservable<IOperationState<T>> GetFirstFromCacheThenServer<T>(ModelIdentifierBase id, CancellationToken ct) where T : class
         {
             var resultFromCache = GetFromCache<T>(id, ct)
                 .Where(it => it.Error == null && !it.IsCancelled)
@@ -268,7 +268,7 @@ namespace Futurice.DataAccess
             return resultFromCache.Merge(resultFromServer);
         }
 
-        private IObservable<IOperationState<T>> Get<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
+        private IObservable<IOperationState<T>> Get<T>(ModelIdentifierBase id, ModelSource source, CancellationToken ct = default) where T : class
         {
             var key = new OperationKey(id, source);
 
@@ -288,7 +288,7 @@ namespace Futurice.DataAccess
                                                 : Observable.Empty<OperationState<T>>()));
         }
 
-        private OperationEntry CreateOperationEntry<T>(ModelIdentifier id, ModelSource source, CancellationToken ct, OperationKey key) where T : class
+        private OperationEntry CreateOperationEntry<T>(ModelIdentifierBase id, ModelSource source, CancellationToken ct, OperationKey key) where T : class
         {
             var combinedCts = new CancellationTokenSource();
             var newOperation = GetModel<T>(id, source, combinedCts.Token);
@@ -319,7 +319,7 @@ namespace Futurice.DataAccess
             return newEntry;
         }
 
-        private IObservable<IOperationState<T>> GetModel<T>(ModelIdentifier id, ModelSource source, CancellationToken ct = default(CancellationToken)) where T : class
+        private IObservable<IOperationState<T>> GetModel<T>(ModelIdentifierBase id, ModelSource source, CancellationToken ct = default) where T : class
         {
             var operation = _loader.Load(id, source, ct: ct);
 
@@ -380,9 +380,9 @@ namespace Futurice.DataAccess
 
         #region UPDATE
         
-        private readonly ConcurrentDictionary<ModelIdentifier, UpdateContainer> _updates = new ConcurrentDictionary<ModelIdentifier, UpdateContainer>();
+        private readonly ConcurrentDictionary<ModelIdentifierBase, UpdateContainer> _updates = new ConcurrentDictionary<ModelIdentifierBase, UpdateContainer>();
 
-        public void Commit((ModelIdentifier id, UpdateEntry update) newUpdate)
+        public void Commit((ModelIdentifierBase id, UpdateEntry update) newUpdate)
         {
             Commit(newUpdate.id, newUpdate.update);
         }
@@ -402,7 +402,7 @@ namespace Futurice.DataAccess
         }
         */
 
-        public void Commit(ModelIdentifier modelIdentifier, UpdateEntry newUpdate)
+        public void Commit(ModelIdentifierBase modelIdentifier, UpdateEntry newUpdate)
         {
             _updates.AddOrUpdate(modelIdentifier, 
                                  _ => new UpdateContainer { newUpdate },
@@ -423,7 +423,7 @@ namespace Futurice.DataAccess
             // if SetImmediately, find model and run update. Need to cache copy if old if parser needs to know it.
         }
 
-        public IObservable<IOperationState<object>> Push(ModelIdentifier id, ModelSource target, CancellationToken ct = default)
+        public IObservable<IOperationState<object>> Push(ModelIdentifierBase id, ModelSource target, CancellationToken ct = default)
         {
             if (_updates.TryGetValue(id, out var update))
             {
@@ -436,7 +436,7 @@ namespace Futurice.DataAccess
         public IObservable<IOperationState<object>> PushAll(ModelSource target, CancellationToken ct = default)
         {
             return 
-                _updates.Aggregate<KeyValuePair<ModelIdentifier, UpdateContainer>, IObservable<IOperationState<object>>>(
+                _updates.Aggregate<KeyValuePair<ModelIdentifierBase, UpdateContainer>, IObservable<IOperationState<object>>>(
                     null,
                     (acc, update) => {
                         var writeOp = _writer.Write(update.Key, update.Value, target, ct);

@@ -6,6 +6,6 @@ namespace Futurice.DataAccess
 {
     public interface IDataLoader
     {
-        void Load(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target, CancellationToken ct = default(CancellationToken));
+        void Load(ModelIdentifierBase id, IObserver<IOperationState<IBuffer>> target, CancellationToken ct = default);
     }
 }

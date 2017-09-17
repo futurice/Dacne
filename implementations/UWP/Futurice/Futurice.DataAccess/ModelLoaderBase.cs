@@ -1,37 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Windows.Storage.Streams;
 
 namespace Futurice.DataAccess
 {
-    public abstract class ModelLoader
+    public abstract class ModelLoaderBase
     {
         private readonly ICache _cache;
 
-        public ModelLoader(ICache defaultCache = null)
+        public ModelLoaderBase(ICache defaultCache = null)
         {
             _cache = defaultCache;
         }
 
-        protected abstract void LoadImplementation(ModelIdentifier id, IObserver<IOperationState<IBuffer>> target, CancellationToken ct = default(CancellationToken));
+        protected abstract void LoadImplementation(ModelIdentifierBase id, IObserver<IOperationState<IBuffer>> target, CancellationToken ct = default);
 
-        protected abstract void ParseImplementation(ModelIdentifier id, IBuffer data, IObserver<IOperationState<object>> target, CancellationToken ct = default(CancellationToken));
+        protected abstract void ParseImplementation(ModelIdentifierBase id, IBuffer data, IObserver<IOperationState<object>> target, CancellationToken ct = default);
 
-        protected virtual ICache GetCache(ModelIdentifier id)
+        protected virtual ICache GetCache(ModelIdentifierBase id)
         {
             return _cache;
         }
 
-        private void LoadData(ModelIdentifier id, ModelSource source, Subject<IOperationState<IBuffer>> target, CancellationToken ct = default(CancellationToken))
+        private void LoadData(ModelIdentifierBase id, ModelSource source, Subject<IOperationState<IBuffer>> target, CancellationToken ct = default)
         {
             ICache cache = GetCache(id);
 
@@ -60,7 +54,7 @@ namespace Futurice.DataAccess
             }
         }
 
-        public IObservable<IOperationState<object>> Load(ModelIdentifier id, ModelSource source, double loadOperationProgressShare = 0.8, CancellationToken ct = default(CancellationToken))
+        public IObservable<IOperationState<object>> Load(ModelIdentifierBase id, ModelSource source, double loadOperationProgressShare = 0.8, CancellationToken ct = default)
         {
             var loadOperationStates = new Subject<IOperationState<IBuffer>>();
             var parseOperationStates = new Subject<IOperationState<object>>();

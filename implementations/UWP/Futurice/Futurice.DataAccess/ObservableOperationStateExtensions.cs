@@ -13,7 +13,7 @@ namespace Futurice.DataAccess
     {
         public static IObservable<IOperationState<TResult>> OnResult<TResult>(this IObservable<IOperationState<TResult>> self, Action<TResult> onResult) where TResult : class
         {
-            TResult oldValue = default(TResult);
+            TResult oldValue = default;
             return self.Do(state =>
             {
                 if (HasChanged(ref oldValue, state.Result))
@@ -27,7 +27,7 @@ namespace Futurice.DataAccess
         {
             TResult result = null;
             ModelSource source = ModelSource.Unknown;
-            ModelIdentifier id = null;
+            ModelIdentifierBase id = null;
             double progress = 0;
             OperationError error = null;
             bool isCancelled = false;
@@ -60,7 +60,7 @@ namespace Futurice.DataAccess
 
         private static bool HasChanged<T>(ref T oldValue, T newValue)
         {
-            if (!Object.Equals(newValue, default(T)) && !Object.Equals(newValue, oldValue)) {
+            if (!Object.Equals(newValue, default) && !Object.Equals(newValue, oldValue)) {
                 oldValue = newValue;
                 return true;
             }
@@ -70,7 +70,7 @@ namespace Futurice.DataAccess
 
         public static IObservable<IOperationState<TResult>> WhereChanged<TResult, TProperty>(this IObservable<IOperationState<TResult>> self, Func<IOperationState<TResult>, TProperty> selector) where TResult : class
         {
-            TProperty oldValue = default(TProperty);
+            TProperty oldValue = default;
             return self.Where(state => {
                 var newValue = selector(state);
                 return HasChanged(ref oldValue, newValue);
@@ -110,13 +110,13 @@ namespace Futurice.DataAccess
             return self;
         }
 
-        public static IObserver<IOperationState<TResult>> OnCompleteResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress, ModelSource source = ModelSource.Unknown) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnCompleteResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifierBase id, double progress, ModelSource source = ModelSource.Unknown) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress, source: source, resultProgress: 100));
             return self;
         }
 
-        public static IObserver<IOperationState<TResult>> OnIncompleteResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifier id, double progress, double resultProgress, ModelSource source = ModelSource.Unknown) where TResult : class
+        public static IObserver<IOperationState<TResult>> OnIncompleteResult<TResult>(this IObserver<IOperationState<TResult>> self, TResult result, ModelIdentifierBase id, double progress, double resultProgress, ModelSource source = ModelSource.Unknown) where TResult : class
         {
             self.OnNext(new OperationState<TResult>(result: result, id: id, progress: progress, source: source, resultProgress: resultProgress));
             return self;

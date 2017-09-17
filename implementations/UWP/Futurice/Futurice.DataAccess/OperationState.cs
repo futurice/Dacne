@@ -8,7 +8,7 @@ namespace Futurice.DataAccess
 
     public class OperationState<T> : OperationStateBase, IOperationState<T> where T : class
     {
-        public OperationState(T result = null, double progress = 0, OperationError error = null, bool isCancelled = false, ModelSource source = ModelSource.Unknown, ModelIdentifier id = null, double resultProgress = 0) : base(error, progress, isCancelled, source, id, resultProgress)
+        public OperationState(T result = null, double progress = 0, OperationError error = null, bool isCancelled = false, ModelSource source = ModelSource.Unknown, ModelIdentifierBase id = null, double resultProgress = 0) : base(error, progress, isCancelled, source, id, resultProgress)
         {
             Result = result;
         }
@@ -19,7 +19,7 @@ namespace Futurice.DataAccess
     public abstract class OperationStateBase : IOperationStateBase
     {
 
-        public OperationStateBase(OperationError error, double progress, bool isCancelled, ModelSource source = ModelSource.Unknown, ModelIdentifier id = null, double resultProgress = 0)
+        public OperationStateBase(OperationError error, double progress, bool isCancelled, ModelSource source = ModelSource.Unknown, ModelIdentifierBase id = null, double resultProgress = 0)
         {
             Error = error;
             Progress = progress;
@@ -33,7 +33,7 @@ namespace Futurice.DataAccess
         public double Progress { get; private set; }
         public bool IsCancelled { get; private set; }
         public ModelSource ResultSource { get; private set; }
-        public ModelIdentifier ResultIdentifier { get; private set; }
+        public ModelIdentifierBase ResultIdentifier { get; private set; }
         public double ResultProgress { get; set; }
     }
 }

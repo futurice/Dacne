@@ -32,14 +32,10 @@ namespace SampleApplication
         /// </summary>
         public App()
         {
-            //Microsoft.ApplicationInsights.WindowsAppInitializer.InitializeAsync(
-            //    Microsoft.ApplicationInsights.WindowsCollectors.Metadata |
-            //    Microsoft.ApplicationInsights.WindowsCollectors.Session);
-            this.InitializeComponent();
-            this.Suspending += OnSuspending;
+            InitializeComponent();
+            Suspending += OnSuspending;
             
-            Repository = new ModelRepository(new ModelLoader(), new ModelWriter());
-
+            Repository = new ModelRepository(new ModelLoader(), new ModelWriter(), new SimpleMemoryCache());
         }
 
         /// <summary>
@@ -53,7 +49,7 @@ namespace SampleApplication
 #if DEBUG
             if (System.Diagnostics.Debugger.IsAttached)
             {
-                this.DebugSettings.EnableFrameRateCounter = true;
+                DebugSettings.EnableFrameRateCounter = true;
             }
 #endif
 

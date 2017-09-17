@@ -4,6 +4,6 @@ namespace Futurice.DataAccess
 {
     public interface ICache : IDataLoader
     {
-        void Save(ModelIdentifier id, IBuffer data);
+        void Save(ModelIdentifierBase id, IBuffer data);
     }
 }
