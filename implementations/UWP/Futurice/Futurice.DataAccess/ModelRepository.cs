@@ -296,15 +296,14 @@ namespace Futurice.DataAccess
             IDisposable connectDisposable = null;
             IDisposable subscriptionDisposable = null;
 
-            Action onFinished = () =>
+            void onFinished()
             {
-                OperationEntry obj;
-                _ongoingOperations.TryRemove(key, out obj);
+                _ongoingOperations.TryRemove(key, out OperationEntry obj);
 
                 subscriptionDisposable?.Dispose();
                 connectDisposable?.Dispose();
-            };
-            
+            }
+
             subscriptionDisposable = newOperation.Subscribe(__ => { }, __ => onFinished(), onFinished);
 
             _operationsObserver.OnNext(newOperation);
@@ -420,7 +419,7 @@ namespace Futurice.DataAccess
                                 }
             );
 
-            // if SetImmediately, find model and run update. Need to cache copy if old if parser needs to know it.
+            // if SetImmediately, find model and run update. Need to cache copy of old if parser needs to know it.
         }
 
         public IObservable<IOperationState<object>> Push(ModelIdentifierBase id, ModelSource target, CancellationToken ct = default)

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace SampleApplication
 {
 
-    // Should these be called ModelProxies -> BbcArticleProxy ?
+    // Should these be called ModelProxies -> BbcArticleProxy, or ModelTokens -> BbcArticleToken ?
     public class BbcArticleIdentifier : SimpleModelIdentifier<NewsArticle>
     {
         public BbcArticleIdentifier(string id) : base(id) { }
