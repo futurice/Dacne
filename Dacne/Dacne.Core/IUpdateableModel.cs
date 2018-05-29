@@ -1,4 +1,4 @@
-﻿namespace Futurice.DataAccess
+﻿namespace Dacne.Core
 {
 
     public interface IUpdateableModel<T>

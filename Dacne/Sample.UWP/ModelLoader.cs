@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Futurice.DataAccess;
+using Dacne.Core;
 using System.Threading;
 using System.IO;
 using System.Reactive.Linq;
 
 namespace SampleApplication
 {
-    public class ModelLoader : Futurice.DataAccess.ModelLoaderBase
+    public class ModelLoader : Dacne.Core.ModelLoaderBase
     {
         protected override void LoadImplementation(ModelIdentifierBase id, IObserver<IOperationState<Stream>> target, CancellationToken ct)
         {

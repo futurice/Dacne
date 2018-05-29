@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reactive.Linq;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
 
     public static class ObservableOperationStateExtensions

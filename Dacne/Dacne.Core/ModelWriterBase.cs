@@ -2,7 +2,7 @@
 using System.Reactive.Subjects;
 using System.Threading;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public abstract class ModelWriterBase
     {

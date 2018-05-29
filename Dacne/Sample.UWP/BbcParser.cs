@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Futurice.DataAccess;
+using Dacne.Core;
 using Windows.Storage.Streams;
 using System.Xml.Linq;
 

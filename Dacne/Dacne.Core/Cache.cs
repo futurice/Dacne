@@ -1,7 +1,7 @@
 ﻿
 using System.IO;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public interface ICache : IDataLoader
     {

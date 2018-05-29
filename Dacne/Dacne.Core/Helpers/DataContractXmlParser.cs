@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public class DataContractXmlParser : SimpleParser
     {

@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public class ModelIdentifierComparer : IEqualityComparer<ModelIdentifierBase>
     {

@@ -1,5 +1,5 @@
 ﻿
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public interface IOperationState<out T> : IOperationStateBase where T : class
     {

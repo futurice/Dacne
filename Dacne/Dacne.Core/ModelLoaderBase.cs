@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public abstract class ModelLoaderBase
     {

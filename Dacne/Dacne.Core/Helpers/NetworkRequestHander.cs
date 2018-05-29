@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public class NetworkRequestHander
     {

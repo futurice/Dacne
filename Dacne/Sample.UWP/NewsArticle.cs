@@ -1,4 +1,4 @@
-﻿using Futurice.DataAccess;
+﻿using Dacne.Core;
 using System;
 
 namespace SampleApplication

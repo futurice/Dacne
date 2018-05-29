@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public interface IDataLoader
     {

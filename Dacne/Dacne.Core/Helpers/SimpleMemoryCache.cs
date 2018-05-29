@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public class SimpleMemoryCache : IMemoryCache
     {

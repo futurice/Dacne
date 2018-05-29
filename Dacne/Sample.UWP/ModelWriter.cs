@@ -1,11 +1,11 @@
 ﻿using System;
-using Futurice.DataAccess;
+using Dacne.Core;
 using System.Threading;
 using System.Diagnostics;
 
 namespace SampleApplication
 {
-    public class ModelWriter : Futurice.DataAccess.ModelWriterBase
+    public class ModelWriter : Dacne.Core.ModelWriterBase
     {
         protected override void WriteImplementation(ModelIdentifierBase id, UpdateContainer update, ModelSource target, IObserver<IOperationState<object>> operation, CancellationToken ct = default)
         {

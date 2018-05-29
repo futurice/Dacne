@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Futurice.DataAccess
+namespace Dacne.Core
 {
     public abstract class SimpleParser : Parser
     {
