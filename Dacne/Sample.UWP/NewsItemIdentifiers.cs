@@ -2,13 +2,19 @@
 using System;
 using System.Collections.Generic;
 
-namespace SampleApplication
+namespace Sample.UWP
 {
 
     // Should these be called ModelProxies -> BbcArticleProxy, or ModelTokens -> BbcArticleToken ?
     public class BbcArticleIdentifier : SimpleModelIdentifier<NewsArticle>
     {
-        public BbcArticleIdentifier(string id) : base(id) { }
+        public BbcArticleIdentifier(NewsArticle article)
+            : this(article.Url.OriginalString)
+        { }
+
+        public BbcArticleIdentifier(string url)
+            : base(url.Substring(url.LastIndexOf('/') + 1))
+        { }
 
         public (ModelIdentifierBase id, UpdateEntry update) ChangeTitle(Func<string, string> update, object updateToken = null)
         {

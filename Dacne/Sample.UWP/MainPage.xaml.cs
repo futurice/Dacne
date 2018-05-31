@@ -6,7 +6,7 @@ using Windows.UI.Xaml.Input;
 using System.Threading;
 using System.Reactive.Linq;
 
-namespace SampleApplication
+namespace Sample.UWP
 {
 
     /// <summary>
@@ -28,7 +28,7 @@ namespace SampleApplication
             Progress = _states.Select(state => state.Error?.ToString() ?? state.Result?.Title ?? state.Progress.ToString()).ToReadOnlyReactiveProperty();
             */
 
-            Loaded += MainPage_Loaded;
+            //Loaded += MainPage_Loaded;
         }
 
         public string Error { get; set; }
@@ -56,28 +56,28 @@ namespace SampleApplication
 
             var tb = new TextBlock();
             tb.Tapped += Tb_Tapped;
-
+            /*
             TextBlocksPanel.Children.Add(tb);
 
             //int count = 0;
             int j = i;
             App.Repository.Get(
-                theArticle,
-                //ModelLoader.GetBbcArticlesIdentifier(),
+                //theArticle,
+                ModelLoader.GetBbcArticlesIdentifier(),
                 SourcePreference.CacheWithServerFallback,
                     i % 2 == 0 ? cts.Token : CancellationToken.None)
                     //.SelectMany(s => Observable.Return(s).DelaySubscription(TimeSpan.FromMilliseconds(50 * count++)))
                     .ObserveOn(SynchronizationContext.Current)
                     .SubscribeStateChange(
-                        onProgress: progress => tb.Text = progress.ToString() + "%",
-                        //onResult: result => tb.Text = result.Count().ToString(),
+                        //onProgress: progress => tb.Text = progress.ToString() + "%",
+                        onResult: result => tb.Text = result.Count().ToString(),
                         onError: error => tb.Text = error.ToString(),
                         onCompleted: state => tb.Text = state?.IsCancelled ?? true
                                                             ? ":("
                                                             : state?.Result?.Title + " / " + state?.ResultSource.ToString()
                     );
             //}
-
+            */
             // Option B
             /*
             DataContext = await states

@@ -1,7 +1,7 @@
 ﻿using Dacne.Core;
 using System;
 
-namespace SampleApplication
+namespace Sample.UWP
 {
     public class NewsArticle : IUpdateableModel<NewsArticle>
     {

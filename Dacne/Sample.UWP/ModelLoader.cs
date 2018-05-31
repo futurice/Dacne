@@ -6,7 +6,7 @@ using System.Threading;
 using System.IO;
 using System.Reactive.Linq;
 
-namespace SampleApplication
+namespace Sample.UWP
 {
     public class ModelLoader : Dacne.Core.ModelLoaderBase
     {
@@ -25,6 +25,11 @@ namespace SampleApplication
         public static BbcArticleIdentifier GetBbcArticleIdentifier(int item, params string[] sections)
         {
             return BbcParser.CreateItemId(item, sections);
+        }
+
+        public static ModelIdentifierBase GetIdentifier(NewsArticle model)
+        {
+            return new BbcArticleIdentifier(model);
         }
 
         public static ModelIdentifier<IEnumerable<NewsArticle>> GetBbcArticlesIdentifier()

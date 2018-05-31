@@ -3,7 +3,7 @@ using Dacne.Core;
 using System.Threading;
 using System.Diagnostics;
 
-namespace SampleApplication
+namespace Sample.UWP
 {
     public class ModelWriter : Dacne.Core.ModelWriterBase
     {

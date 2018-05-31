@@ -1,10 +1,20 @@
 ﻿using System.Collections.Concurrent;
+using System.Linq;
 
 namespace Dacne.Core
 {
     public class SimpleMemoryCache : IMemoryCache
     {
         private readonly ConcurrentDictionary<ModelIdentifierBase, object> _cache = new ConcurrentDictionary<ModelIdentifierBase, object>();
+
+        public ModelIdentifierBase GetId(object model)
+        {
+            return
+                _cache
+                    .Where(e => e.Value == model)
+                    .Select(e => e.Key)
+                    .FirstOrDefault();
+        }
 
         public T Get<T>(ModelIdentifierBase id) where T : class
         {

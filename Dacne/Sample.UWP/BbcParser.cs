@@ -7,7 +7,7 @@ using Dacne.Core;
 using Windows.Storage.Streams;
 using System.Xml.Linq;
 
-namespace SampleApplication
+namespace Sample.UWP
 {
     public class BbcParser : Parser
     {
@@ -35,8 +35,7 @@ namespace SampleApplication
                     Title = item.Element("title").Value
                 };
 
-                var idString = link.Substring(link.LastIndexOf('/') + 1);
-                var thisId = new BbcArticleIdentifier(idString);
+                var thisId = new BbcArticleIdentifier(article);
 
                 progress = thisId.Equals(id) ? 100 : progress + itemProgress;
 

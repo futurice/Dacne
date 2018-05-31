@@ -172,7 +172,7 @@ namespace Dacne.Core
     {
         T Get<T>(ModelIdentifierBase id) where T : class;
         void Set<T>(ModelIdentifierBase id, T model) where T : class;
-
+        ModelIdentifierBase GetId(object model);
     }
 
     /// <summary>
@@ -323,7 +323,7 @@ namespace Dacne.Core
                 .Where(state => state.ResultProgress == 100)
                 .Subscribe(state =>
                 {
-                    var result = state.Result as T;
+                    var result = state.Result;
                     var resultId = state.ResultIdentifier;
 
                     if (id.Equals(resultId))
@@ -443,6 +443,11 @@ namespace Dacne.Core
                         return writeOp;
                     }
                 );            
+        }
+
+        public ModelIdentifierBase GetIdentifier(object model)
+        {
+            return _cache.GetId(model);
         }
 
         #endregion
